@@ -1,11 +1,10 @@
 import pandas as pd
 import psycopg2
 import json
-import pprint
-from query import daily_data_query
+from data.query import *
 
 class DataFetcher:
-    def __init__(self, db_config_path='database.json'):
+    def __init__(self, db_config_path='data/database.json'):
         self.db_config_path = db_config_path
         self.df = None
 
@@ -29,14 +28,12 @@ class DataFetcher:
         self.process_data()
         return self.df
 
+    # Modify the data
     def process_data(self):
-        self.df['date'] = pd.to_datetime(self.df['date'])
-        self.df.set_index('date', inplace=True)
+        # Sort the database according to date
+        self.df.set_index('date', inplace=True) 
+        # Rename quantity to volume
         self.df.rename(columns={'quantity': 'volume'}, inplace=True)
-        price_columns = ['open', 'high', 'low', 'close']
-        self.df[price_columns] = self.df[price_columns].astype(float)
 
 
-fetcher = DataFetcher()
-df = fetcher.fetch_data()
-pprint.pp(df)
+
