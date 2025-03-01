@@ -23,7 +23,7 @@ class DataFetcher:
         ) as conn:
             with conn.cursor() as cur:
                 cur.execute(daily_data_query)
-                self.df = pd.DataFrame(cur.fetchall(), columns=['date', 'symbol', 'high', 'low', 'close', 'open', 'quantity'])
+                self.df = pd.DataFrame(cur.fetchall(), columns=['date', 'symbol', 'high', 'low', 'close', 'open'])
         
         self.process_data()
         return self.df

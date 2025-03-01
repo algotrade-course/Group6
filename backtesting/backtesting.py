@@ -23,7 +23,7 @@ class Backtesting:
         if (self.data is None):
             raise TypeError("Data is not initiated")
         pprint.pp(self.data)
-        print(self.data["close"])
+        # print(self.data["close"])
 
     def calculate_rsi(self, data=None, period=14):
         if data is None:

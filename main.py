@@ -4,8 +4,8 @@ from data.service import *
 
 backtesting = Backtesting()
 backtesting.initiate_data()
-# backtesting.print_data()
+backtesting.print_data()
 
-print(backtesting.calculate_rsi())
-print(backtesting.calculate_moving_averages(5))
+# print(backtesting.calculate_rsi())
+# print(backtesting.calculate_moving_averages(5))
 
