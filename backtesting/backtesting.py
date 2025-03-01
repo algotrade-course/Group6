@@ -21,7 +21,7 @@ class Backtesting:
 
     def print_data(self):
         if (self.data is None):
-            raise TypeError("data is not initiated")
+            raise TypeError("Data is not initiated")
         pprint.pp(self.data)
         print(self.data["close"])
 
@@ -46,14 +46,17 @@ class Backtesting:
 
         return data
 
-    def calculate_moving_averages(self, data=None):
+    def calculate_moving_averages(self, period, data=None):
+        if period is None:
+            raise TypeError("No period in calculating MA")
         if data is None:
             data = self.data
         if data.empty:
             return data
 
-        data["MA50"] = data["close"].rolling(window=50).mean()
-        data["MA200"] = data["close"].rolling(window=200).mean()
+        columns_name = "MA" + str(period)
+        data[columns_name] = data["close"].rolling(window=period).mean()
+        
         return data
 
     def calculate_bollinger_bands(self, data=None, period=20, std_dev=2):
