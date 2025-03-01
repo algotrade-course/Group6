@@ -35,5 +35,13 @@ class DataFetcher:
         # Rename quantity to volume
         self.df.rename(columns={'quantity': 'volume'}, inplace=True)
 
+    def save_to_csv(self, file_path='output.csv'):
+        if self.df is not None:
+            self.df.to_csv(file_path, index=True)  # Giữ cột 'date' làm index
+            print(f"Dữ liệu đã được lưu vào {file_path}")
+        else:
+            print("Không có dữ liệu để lưu!")
+
+
 
 

@@ -18,6 +18,8 @@ class Backtesting:
     def initiate_data(self):
         self.daily_data = DataFetcher()
         self.data = self.daily_data.fetch_data()
+        self.daily_data.save_to_csv('daily_data.csv')  # Sửa lại từ self.fetcher thành self.daily_data
+
 
     def print_data(self):
         if (self.data is None):

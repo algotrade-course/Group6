@@ -108,6 +108,23 @@ OR
 OR
     (tb_max.tickersymbol = 'VN30F2403' AND tb_max.datetime BETWEEN '2024-02-16' AND '2024-03-21')
 OR
-    (tb_max.tickersymbol = 'VN30F2501' AND tb_max.datetime BETWEEN '2024-12-20' AND '2025-02-25')
+    (tb_max.tickersymbol = 'VN30F2404' AND tb_max.datetime BETWEEN '2024-03-22' AND '2024-04-18')
+OR
+    (tb_max.tickersymbol = 'VN30F2405' AND tb_max.datetime BETWEEN '2024-04-19' AND '2024-05-16')
+OR
+    (tb_max.tickersymbol = 'VN30F2406' AND tb_max.datetime BETWEEN '2024-05-17' AND '2024-06-20')
+OR
+    (tb_max.tickersymbol = 'VN30F2407' AND tb_max.datetime BETWEEN '2024-06-21' AND '2024-07-18')
+OR
+    (tb_max.tickersymbol = 'VN30F2408' AND tb_max.datetime BETWEEN '2024-07-19' AND '2024-08-15')
+OR
+    (tb_max.tickersymbol = 'VN30F2409' AND tb_max.datetime BETWEEN '2024-08-16' AND '2024-09-19')
+OR
+    (tb_max.tickersymbol = 'VN30F2410' AND tb_max.datetime BETWEEN '2024-09-20' AND '2024-10-17')
+OR
+    (tb_max.tickersymbol = 'VN30F2411' AND tb_max.datetime BETWEEN '2024-10-18' AND '2024-11-21')
+OR
+    (tb_max.tickersymbol = 'VN30F2412' AND tb_max.datetime BETWEEN '2024-11-22' AND '2024-12-19')
+
 ORDER BY tb_max.datetime ASC;
 """
