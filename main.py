@@ -8,7 +8,7 @@ import plotly.subplots as sp
 # Initialize backtesting
 backtesting = Backtesting()
 backtesting.initiate_data()
-backtesting.print_data()
+# backtesting.print_data()
 
 # Load CSV file
 df = pd.read_csv('daily_data.csv')
@@ -127,4 +127,61 @@ fig.update_layout(
 )
 
 # 🚀 Show the chart
-fig.show()
+# fig.show()
+
+# =================================================================================================
+# =================================================================================================
+# =================================================================================================
+# =================================================================================================
+# ===========# ====================================================================================
+# =================================================================================================
+# =================================================================================================
+# =================================================================================================
+# =================================================================================================
+# =================================================================================================
+# =================================================================================================
+# =================================================================================================
+# Code here
+# ✅ Backtesting Strategy
+capital = 100000  # Initial capital (100,000 VND)
+position = 0       # Current position (1 for long, -1 for short, 0 for none)
+entry_price = 0
+returns = []       # Store profit/loss
+for i in range(1, len(df)):
+    # ✅ ENTRY CONDITIONS
+    if position == 0:
+        if df["RSI"].iloc[i] < 10 or df["close"].iloc[i] <= df["BB_Lower"].iloc[i]:
+            position = 1  # Open Long
+            entry_price = df["close"].iloc[i]
+
+        elif df["RSI"].iloc[i] > 90 or df["close"].iloc[i] >= df["BB_Upper"].iloc[i]:
+            position = -1  # Open Short
+            entry_price = df["close"].iloc[i]
+
+    # ✅ EXIT CONDITIONS
+    elif position == 1:  # Close Long
+        if df["RSI"].iloc[i] > 90 or df["close"].iloc[i] >= df["BB_Upper"].iloc[i]:
+            profit = (df["close"].iloc[i] - entry_price) / entry_price * 100
+            capital += capital * (profit / 100)
+            returns.append(profit)
+            position = 0
+
+    elif position == -1:  # Close Short
+        if df["RSI"].iloc[i] < 25 or df["close"].iloc[i] <= df["BB_Lower"].iloc[i]:
+            profit = (entry_price - df["close"].iloc[i]) / entry_price * 100
+            capital += capital * (profit / 100)
+            returns.append(profit)
+            position = 0
+
+# ✅ Performance Metrics
+total_return = sum(returns)
+win_rate = len([x for x in returns if x > 0]) / len(returns) * 100 if returns else 0
+max_drawdown = min(returns) if returns else 0
+sharpe_ratio = np.mean(returns) / (np.std(returns) + 1e-10) if returns else 0
+
+# ✅ Results
+print(f"📈 Final Capital: {capital:.2f} VND")
+print(f"✅ Total Return: {total_return:.2f}%")
+print(f"🏆 Win Rate: {win_rate:.2f}%")
+print(f"📉 Max Drawdown: {max_drawdown:.2f}%")
+print(f"⚡ Sharpe Ratio: {sharpe_ratio:.2f}")
