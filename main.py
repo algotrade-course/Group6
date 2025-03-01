@@ -147,14 +147,26 @@ capital = 100000  # Initial capital (100,000 VND)
 position = 0       # Current position (1 for long, -1 for short, 0 for none)
 entry_price = 0
 returns = []       # Store profit/loss
-for i in range(1, len(df)):
-    # ✅ ENTRY CONDITIONS
-    if position == 0:
-        if df["RSI"].iloc[i] < 10 or df["close"].iloc[i] <= df["BB_Lower"].iloc[i]:
+trend = None
+# ✅ Backtesting Strategy
+for i in range(2, len(df)):  # Start from index 2 to check previous days
+    # ✅ Detect SMA50 - SMA200 Sign Change
+    sma_diff_prev = df["SMA50"].iloc[i-1] - df["SMA200"].iloc[i-1]
+    sma_diff_now = df["SMA50"].iloc[i] - df["SMA200"].iloc[i]
+
+    # If SMA difference changes sign → Possible Trend Change
+    if (sma_diff_prev < 0 and sma_diff_now > 0):
+        trend = "up"  # Uptrend
+    elif (sma_diff_prev > 0 and sma_diff_now < 0):
+        trend = "down"  # Downtrend
+
+    # ✅ ENTRY CONDITIONS (Based on Trend)
+    if position == 0 and trend:
+        if trend == "up" and (df["RSI"].iloc[i] < 10 or df["close"].iloc[i] <= df["BB_Lower"].iloc[i]):
             position = 1  # Open Long
             entry_price = df["close"].iloc[i]
 
-        elif df["RSI"].iloc[i] > 90 or df["close"].iloc[i] >= df["BB_Upper"].iloc[i]:
+        elif trend == "down" and (df["RSI"].iloc[i] > 90 or df["close"].iloc[i] >= df["BB_Upper"].iloc[i]):
             position = -1  # Open Short
             entry_price = df["close"].iloc[i]
 
