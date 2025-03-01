@@ -19,7 +19,7 @@ df['date'] = pd.to_datetime(df['date'])
 # Sort by date
 df = df.sort_values(by='date')
 
-# ✅ RSI Calculation Function
+# RSI Calculation Function
 def calculate_rsi(data, period=14):
     delta = data["close"].diff(1)
 
@@ -34,7 +34,7 @@ def calculate_rsi(data, period=14):
 
     return rsi
 
-# ✅ Bollinger Bands Calculation
+# Bollinger Bands Calculation
 def calculate_bollinger_bands(data, period=20, std_dev=2):
     rolling_mean = data["close"].rolling(window=period).mean()
     rolling_std = data["close"].rolling(window=period).std()
@@ -45,7 +45,7 @@ def calculate_bollinger_bands(data, period=20, std_dev=2):
 
     return data
 
-# ✅ Moving Averages Calculation
+# Moving Averages Calculation
 def calculate_sma(data, period):
     return data["close"].rolling(window=period).mean()
 
@@ -55,12 +55,12 @@ df = calculate_bollinger_bands(df)
 df["SMA50"] = calculate_sma(df, 50)
 df["SMA200"] = calculate_sma(df, 200)
 
-# ✅ Create subplots: Candlestick chart + RSI
+# Create subplots: Candlestick chart + RSI
 fig = sp.make_subplots(rows=2, cols=1, shared_xaxes=True, 
                        vertical_spacing=0.2, subplot_titles=('Candlestick Chart with SMA & Bollinger Bands', 'RSI Indicator'),
                        row_heights=[0.7, 0.3])
 
-# 📈 Candlestick chart with Bollinger Bands
+# Candlestick chart with Bollinger Bands
 fig.add_trace(go.Candlestick(
     x=df['date'],
     open=df['open'],
@@ -71,7 +71,7 @@ fig.add_trace(go.Candlestick(
     decreasing_line_color='red'
 ), row=1, col=1)
 
-# 📊 Bollinger Bands
+# Bollinger Bands
 fig.add_trace(go.Scatter(
     x=df['date'],
     y=df["BB_Upper"],
@@ -88,7 +88,7 @@ fig.add_trace(go.Scatter(
     line=dict(color='purple', width=1, dash='dot')
 ), row=1, col=1)
 
-# 📊 SMA50 (Short-term Moving Average)
+# SMA50 (Short-term Moving Average)
 fig.add_trace(go.Scatter(
     x=df['date'],
     y=df["SMA50"],
@@ -97,7 +97,7 @@ fig.add_trace(go.Scatter(
     line=dict(color='blue', width=1.5)
 ), row=1, col=1)
 
-# 📊 SMA200 (Long-term Moving Average)
+# SMA200 (Long-term Moving Average)
 fig.add_trace(go.Scatter(
     x=df['date'],
     y=df["SMA200"],
@@ -106,7 +106,7 @@ fig.add_trace(go.Scatter(
     line=dict(color='orange', width=1.5)
 ), row=1, col=1)
 
-# 📉 RSI Chart
+# RSI Chart
 fig.add_trace(go.Scatter(
     x=df['date'],
     y=df['RSI'],
@@ -115,18 +115,18 @@ fig.add_trace(go.Scatter(
     line=dict(color='blue', width=2)
 ), row=2, col=1)
 
-# 🔥 Add RSI Levels (Overbought 70, Oversold 30)
+# Add RSI Levels (Overbought 70, Oversold 30)
 fig.add_hline(y=90, line=dict(color='red', dash="dash"), row=2, col=1)
 fig.add_hline(y=10, line=dict(color='green', dash="dash"), row=2, col=1)
 
-# 🎨 Layout settings
+# Layout settings
 fig.update_layout(
     title="Candlestick Chart with SMA50, SMA200, Bollinger Bands & RSI",
     xaxis_rangeslider_visible=False,
     template="plotly_dark"
 )
 
-# 🚀 Show the chart
+# Show the chart
 # fig.show()
 
 # =================================================================================================
@@ -142,15 +142,15 @@ fig.update_layout(
 # =================================================================================================
 # =================================================================================================
 # Code here
-# ✅ Backtesting Strategy
+# Backtesting Strategy
 capital = 100000  # Initial capital (100,000 VND)
 position = 0       # Current position (1 for long, -1 for short, 0 for none)
 entry_price = 0
 returns = []       # Store profit/loss
 trend = None
-# ✅ Backtesting Strategy
+# Backtesting Strategy
 for i in range(2, len(df)):  # Start from index 2 to check previous days
-    # ✅ Detect SMA50 - SMA200 Sign Change
+    # Detect SMA50 - SMA200 Sign Change
     sma_diff_prev = df["SMA50"].iloc[i-1] - df["SMA200"].iloc[i-1]
     sma_diff_now = df["SMA50"].iloc[i] - df["SMA200"].iloc[i]
 
@@ -160,7 +160,7 @@ for i in range(2, len(df)):  # Start from index 2 to check previous days
     elif (sma_diff_prev > 0 and sma_diff_now < 0):
         trend = "down"  # Downtrend
 
-    # ✅ ENTRY CONDITIONS (Based on Trend)
+    # ENTRY CONDITIONS (Based on Trend)
     if position == 0 and trend:
         if trend == "up" and (df["RSI"].iloc[i] < 10 or df["close"].iloc[i] <= df["BB_Lower"].iloc[i]):
             position = 1  # Open Long
@@ -170,7 +170,7 @@ for i in range(2, len(df)):  # Start from index 2 to check previous days
             position = -1  # Open Short
             entry_price = df["close"].iloc[i]
 
-    # ✅ EXIT CONDITIONS
+    # EXIT CONDITIONS
     elif position == 1:  # Close Long
         if df["RSI"].iloc[i] > 90 or df["close"].iloc[i] >= df["BB_Upper"].iloc[i]:
             profit = (df["close"].iloc[i] - entry_price) / entry_price * 100
@@ -185,13 +185,13 @@ for i in range(2, len(df)):  # Start from index 2 to check previous days
             returns.append(profit)
             position = 0
 
-# ✅ Performance Metrics
+# Performance Metrics
 total_return = sum(returns)
 win_rate = len([x for x in returns if x > 0]) / len(returns) * 100 if returns else 0
 max_drawdown = min(returns) if returns else 0
 sharpe_ratio = np.mean(returns) / (np.std(returns) + 1e-10) if returns else 0
 
-# ✅ Results
+# Results
 print(f"📈 Final Capital: {capital:.2f} VND")
 print(f"✅ Total Return: {total_return:.2f}%")
 print(f"🏆 Win Rate: {win_rate:.2f}%")
