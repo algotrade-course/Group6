@@ -1,21 +1,36 @@
 import pandas as pd
 import numpy as np
+import pprint
+from data.service import *
 
 
 class Backtesting:
     def __init__(
         self,
-        portfolio,
-        daily_data,
-        period,
-        no_firms,
+        data=None,
+        period=14,        
+        daily_data=None,
     ):
-        self.portfolio = portfolio
         self.daily_data = daily_data
         self.period = period
-        self.no_firms = no_firms
+        self.data = data
 
-    def calculate_rsi(self, data, period=14):
+    def initiate_data(self):
+        self.daily_data = DataFetcher()
+        self.data = self.daily_data.fetch_data()
+
+    def print_data(self):
+        if (self.data is None):
+            raise TypeError("data is not initiated")
+        pprint.pp(self.data)
+        print(self.data["close"])
+
+    def calculate_rsi(self, data=None, period=14):
+        if data is None:
+            data = self.data
+        if data.empty:
+            return data
+
         delta = data["Close"].diff(1)
         gain = np.where(delta > 0, delta, 0)
         loss = np.where(delta < 0, -delta, 0)
@@ -29,35 +44,40 @@ class Backtesting:
         data["RSI"] = rsi
         return data
 
-    def calculate_moving_averages(self, data):
+    def calculate_moving_averages(self, data=None):
+        if data is None:
+            data = self.data
+        if data.empty:
+            return data
+
         data["MA50"] = data["Close"].rolling(window=50).mean()
         data["MA200"] = data["Close"].rolling(window=200).mean()
         return data
 
-    def calculate_bollinger_bands(self, data, period=20, std_dev=2):
+    def calculate_bollinger_bands(self, data=None, period=20, std_dev=2):
+        if data is None:
+            data = self.data
+        if data.empty:
+            return data
+
         data["BB_Middle"] = data["Close"].rolling(window=period).mean()
-        data["BB_Upper"] = data["BB_Middle"] + (
-            std_dev * data["Close"].rolling(window=period).std()
-        )
-        data["BB_Lower"] = data["BB_Middle"] - (
-            std_dev * data["Close"].rolling(window=period).std()
-        )
+        data["BB_Upper"] = data["BB_Middle"] + (std_dev * data["Close"].rolling(window=period).std())
+        data["BB_Lower"] = data["BB_Middle"] - (std_dev * data["Close"].rolling(window=period).std())
         return data
 
-    def generate_signals(self, data):
+    def generate_signals(self, data=None):
+        if data is None:
+            data = self.data
+        if data.empty:
+            return data
+
         data["Signal"] = "HOLD"
 
         for i in range(1, len(data)):
             # Moving Average Crossover
-            if (
-                data["MA50"][i] > data["MA200"][i]
-                and data["MA50"][i - 1] <= data["MA200"][i - 1]
-            ):
+            if data["MA50"][i] > data["MA200"][i] and data["MA50"][i - 1] <= data["MA200"][i - 1]:
                 data.at[i, "Signal"] = "BUY"
-            elif (
-                data["MA50"][i] < data["MA200"][i]
-                and data["MA50"][i - 1] >= data["MA200"][i - 1]
-            ):
+            elif data["MA50"][i] < data["MA200"][i] and data["MA50"][i - 1] >= data["MA200"][i - 1]:
                 data.at[i, "Signal"] = "SELL"
 
             # RSI conditions
@@ -75,8 +95,12 @@ class Backtesting:
         return data
 
     def backtest_strategy(self):
-        self.daily_data = self.calculate_rsi(self.daily_data)
-        self.daily_data = self.calculate_moving_averages(self.daily_data)
-        self.daily_data = self.calculate_bollinger_bands(self.daily_data)
-        self.daily_data = self.generate_signals(self.daily_data)
-        return self.daily_data
+        if self.data.empty:
+            print("No data available for backtesting.")
+            return self.data
+
+        self.data = self.calculate_rsi(self.data)
+        self.data = self.calculate_moving_averages(self.data)
+        self.data = self.calculate_bollinger_bands(self.data)
+        self.data = self.generate_signals(self.data)
+        return self.data
