@@ -79,8 +79,90 @@ class Backtesting:
         self.data = self.calculate_bollinger_bands()
         self.data = self.calculate_sma(50)
         self.data = self.calculate_sma(200)
-        pprint.pp(self.data[:25])
+        self.data.reset_index(inplace=True)
+        self.data["index"] = self.data.index 
+        pprint.pp(self.data)
         return self.data
+    
+    def plot_chart(self):
+        if self.data is None or self.data.empty:
+            print("No data available for plotting.")
+            return
+        
+        fig = sp.make_subplots(
+            rows=2, cols=1, shared_xaxes=True,
+            vertical_spacing=0.2,
+            subplot_titles=('Candlestick Chart with SMA & Bollinger Bands', 'RSI Indicator'),
+            row_heights=[0.7, 0.3]
+        )
+        
+        
+        # Candlestick chart
+        fig.add_trace(go.Candlestick(
+            x=self.data['date'],
+            open=self.data['open'],
+            high=self.data['high'],
+            low=self.data['low'],
+            close=self.data['close'],
+            increasing_line_color='green',
+            decreasing_line_color='red'
+        ), row=1, col=1)
+        
+        # Bollinger Bands
+        fig.add_trace(go.Scatter(
+            x=self.data['date'],
+            y=self.data["BB_Upper"],
+            mode='lines',
+            name="Bollinger Upper",
+            line=dict(color='purple', width=1, dash='dot')
+        ), row=1, col=1)
+        
+        fig.add_trace(go.Scatter(
+            x=self.data['date'],
+            y=self.data["BB_Lower"],
+            mode='lines',
+            name="Bollinger Lower",
+            line=dict(color='purple', width=1, dash='dot')
+        ), row=1, col=1)
+        
+        # SMA lines
+        fig.add_trace(go.Scatter(
+            x=self.data['date'],
+            y=self.data["SMA50"],
+            mode='lines',
+            name="SMA 50",
+            line=dict(color='blue', width=1.5)
+        ), row=1, col=1)
+        
+        fig.add_trace(go.Scatter(
+            x=self.data['date'],
+            y=self.data["SMA200"],
+            mode='lines',
+            name="SMA 200",
+            line=dict(color='orange', width=1.5)
+        ), row=1, col=1)
+        
+        # RSI Chart
+        fig.add_trace(go.Scatter(
+            x=self.data['date'],
+            y=self.data['RSI'],
+            mode='lines',
+            name='RSI',
+            line=dict(color='blue', width=2)
+        ), row=2, col=1)
+        
+        # RSI Levels
+        fig.add_hline(y=90, line=dict(color='red', dash="dash"), row=2, col=1)
+        fig.add_hline(y=10, line=dict(color='green', dash="dash"), row=2, col=1)
+        
+        fig.update_layout(
+            title="Candlestick Chart with SMA50, SMA200, Bollinger Bands & RSI",
+            xaxis_rangeslider_visible=False,
+            template="plotly_dark"
+        )
+        
+        fig.show()
+
 
     def backtest_strategy(self, capital=100000):
         if self.data is None or self.data.empty:

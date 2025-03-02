@@ -15,3 +15,6 @@ backtest.apply_indicators()
 
 # Run backtest strategy
 backtest.backtest_strategy()
+
+# Run plot chart (Still have some problem related to connection)
+# backtest.plot_chart()
