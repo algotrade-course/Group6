@@ -81,8 +81,19 @@ class Backtesting:
         self.data = self.calculate_sma(200)
         self.data.reset_index(inplace=True)
         self.data["index"] = self.data.index 
-        pprint.pp(self.data)
+        
         return self.data
+
+    def split_data(self, train_size=0.7):
+        if self.data is None or self.data.empty:
+            raise ValueError("No data available to split.")
+        
+        split_index = int(len(self.data) * train_size)
+        self.train_data = self.data.iloc[:split_index].copy()
+        self.test_data = self.data.iloc[split_index:].copy()
+        
+        print(f"Data split: {len(self.train_data)} (train), {len(self.test_data)} (test)")
+
     
     def plot_chart(self):
         if self.data is None or self.data.empty:
@@ -164,8 +175,8 @@ class Backtesting:
         fig.show()
 
 
-    def backtest_strategy(self, capital=100000):
-        if self.data is None or self.data.empty:
+    def backtest_strategy(self, data_test, capital=100000):
+        if data_test is None or data_test.empty:
             print("No data available for backtesting.")
             return
 
@@ -174,45 +185,41 @@ class Backtesting:
         returns = []
         trend = None
 
-        for i in range(2, len(self.data)):
-            sma_diff_prev = self.data["SMA50"].iloc[i-1] - self.data["SMA200"].iloc[i-1]
-            sma_diff_now = self.data["SMA50"].iloc[i] - self.data["SMA200"].iloc[i]
-            # If SMA difference changes sign, the trend possibly changes
+        for i in range(2, len(data_test)):
+            sma_diff_prev = data_test["SMA50"].iloc[i-1] - data_test["SMA200"].iloc[i-1]
+            sma_diff_now = data_test["SMA50"].iloc[i] - data_test["SMA200"].iloc[i]
+            
             if sma_diff_prev < 0 and sma_diff_now > 0:
                 trend = "up"
             elif sma_diff_prev > 0 and sma_diff_now < 0:
                 trend = "down"
-            # Entry condition
+            
             if position == 0 and trend:
-                if trend == "up" and (self.data["RSI"].iloc[i] < 10 or self.data["close"].iloc[i] <= self.data["BB_Lower"].iloc[i]):
+                if trend == "up" and (data_test["RSI"].iloc[i] < 10 or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i]):
                     position = 1
-                    entry_price = self.data["close"].iloc[i]
-                elif trend == "down" and (self.data["RSI"].iloc[i] > 90 or self.data["close"].iloc[i] >= self.data["BB_Upper"].iloc[i]):
+                    entry_price = data_test["close"].iloc[i]
+                elif trend == "down" and (data_test["RSI"].iloc[i] > 90 or data_test["close"].iloc[i] >= data_test["BB_Upper"].iloc[i]):
                     position = -1
-                    entry_price = self.data["close"].iloc[i]
-            # Exit condition
-            elif position == 1: #Close long
-                if self.data["RSI"].iloc[i] > 90 or self.data["close"].iloc[i] >= self.data["BB_Upper"].iloc[i]:
-                    profit = (self.data["close"].iloc[i] - entry_price) / entry_price * 100
-                    capital += capital * (profit / 100)
+                    entry_price = data_test["close"].iloc[i]
+            
+            elif position == 1:
+                if data_test["RSI"].iloc[i] > 90 or data_test["close"].iloc[i] >= data_test["BB_Upper"].iloc[i]:
+                    profit = float((data_test["close"].iloc[i] - entry_price) / entry_price * 100)
+                    capital += capital * (profit / 100.0)
                     returns.append(profit)
                     position = 0
 
-            elif position == -1: #Close short
-                if self.data["RSI"].iloc[i] < 25 or self.data["close"].iloc[i] <= self.data["BB_Lower"].iloc[i]:
-                    profit = (entry_price - self.data["close"].iloc[i]) / entry_price * 100
-                    capital += capital * (profit / 100)
+            elif position == -1:
+                if data_test["RSI"].iloc[i] < 25 or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i]:
+                    profit = float((entry_price - data_test["close"].iloc[i]) / entry_price * 100)
+                    capital += capital * (profit / 100.0)
                     returns.append(profit)
                     position = 0
 
         total_return = sum(returns)
         win_rate = len([x for x in returns if x > 0]) / len(returns) * 100 if returns else 0
         max_drawdown = min(returns) if returns else 0
-        # Convert returns to float before calculating statistics
-        # returns_float = np.array([float(r) for r in returns]) if returns else np.array([])
-
-        # Calculate Sharpe Ratio safely
-        # sharpe_ratio = np.mean(returns_float) / (np.std(returns_float) + 1e-10) if returns_float.size > 0 else 0
+        
         sharpe_ratio = float(np.mean(returns)) / (float(np.std(returns)) + 1e-10) if returns else 0
 
         print(f" Final Capital: {capital:.2f} VND")
@@ -220,3 +227,17 @@ class Backtesting:
         print(f" Win Rate: {win_rate:.2f}%")
         print(f" Max Drawdown: {max_drawdown:.2f}%")
         print(f" Sharpe Ratio: {sharpe_ratio:.2f}")
+
+    #Split the test case into in-sample (80%) and out-sample (20%)
+    def run_backtest(self):
+        print("\n--- Running Backtest (100%) ---")
+        self.backtest_strategy(self.data)
+
+        print("\n--- Split data ---")
+        self.split_data()
+
+        print("\n--- Running In-Sample Backtest (70%) ---")
+        self.backtest_strategy(self.train_data)
+        
+        print("\n--- Running Out-of-Sample Backtest (30%) ---")
+        self.backtest_strategy(self.test_data)
