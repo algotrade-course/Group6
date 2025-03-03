@@ -195,6 +195,7 @@ class Backtesting:
             width=[bar_width] * len(capital_history),
             text=[f"{cap:.2f}" for cap in capital_history],
             textposition='outside',
+            marker={"color" : "green"}
         ))
 
         # Update layout for better visualization
