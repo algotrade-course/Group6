@@ -263,17 +263,70 @@ class Backtesting:
         
         # Call the plotting function
         self.plot_returns(returns, initial_capital=100000)
+    
+    def backtest_strategy_2(self, data_test, capital=100000):
+        if data_test is None or data_test.empty:
+            print("No data available for backtesting.")
+            return
+ 
+        # 🔥 Fix NaN & Type Issues
+        data_test.dropna(inplace=True)
+        data_test["RSI"] = pd.to_numeric(data_test["RSI"], errors='coerce')
+        data_test["BB_Lower"] = pd.to_numeric(data_test["BB_Lower"], errors='coerce')
+        data_test["close"] = pd.to_numeric(data_test["close"], errors='coerce')
+ 
+        position = 0
+        entry_price = 0
+        returns = []
+ 
+        for i in range(1, len(data_test)):
+            if position == 0:
+                if data_test["RSI"].iloc[i] < 25 or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i]:
+                    position = 1  # Open Long
+                    entry_price = data_test["close"].iloc[i]
+ 
+                elif data_test["RSI"].iloc[i] > 90 or data_test["close"].iloc[i] >= data_test["BB_Upper"].iloc[i]:
+                    position = -1  # Open Short
+                    entry_price = data_test["close"].iloc[i]
+ 
+            elif position == 1:  # Close Long
+                if data_test["RSI"].iloc[i] > 90 or data_test["close"].iloc[i] >= data_test["BB_Upper"].iloc[i]:
+                    profit = (data_test["close"].iloc[i] - entry_price) / entry_price * 100
+                    capital += capital * (profit / 100)
+                    returns.append(profit)
+                    position = 0
+ 
+            elif position == -1:  # Close Short
+                if data_test["RSI"].iloc[i] < 25 or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i]:
+                    profit = (entry_price - data_test["close"].iloc[i]) / entry_price * 100
+                    capital += capital * (profit / 100)
+                    returns.append(profit)
+                    position = 0    
+ 
+        total_return = sum(returns)
+        win_rate = len([x for x in returns if x > 0]) / len(returns) * 100 if returns else 0
+        max_drawdown = min(returns) if returns else 0
+        sharpe_ratio = float(np.mean(returns)) / (float(np.std(returns)) + 1e-10) if returns else 0
+ 
+        print(f" Final Capital: {capital:.2f} VND")
+        print(f" Total Return: {total_return:.2f}%")
+        print(f" Win Rate: {win_rate:.2f}%")
+        print(f" Max Drawdown: {max_drawdown:.2f}%")
+        print(f" Sharpe Ratio: {sharpe_ratio:.2f}")
+ 
+        # Call the plotting function
+        self.plot_returns(returns, initial_capital=100000)
 
     #Split the test case into in-sample (80%) and out-sample (20%)
     def run_backtest(self):
         print("\n--- Running Backtest (100%) ---")
-        self.backtest_strategy(self.data)
+        self.backtest_strategy_2(self.data)
 
         print("\n--- Split data ---")
         self.split_data()
 
         print("\n--- Running In-Sample Backtest (70%) ---")
-        self.backtest_strategy(self.train_data)
+        self.backtest_strategy_2(self.train_data)
         
         print("\n--- Running Out-of-Sample Backtest (30%) ---")
-        self.backtest_strategy(self.test_data)
+        self.backtest_strategy_2(self.test_data)
