@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import pprint
 import plotly.graph_objects as go
+import plotly.express as px
 import plotly.subplots as sp
 from data.service import *
 
@@ -175,6 +176,38 @@ class Backtesting:
         fig.show()
 
 
+    def plot_returns(self, returns, initial_capital=100000, bar_width=0.3):
+        if not returns:
+            print("No transactions recorded. Cannot plot returns.")
+            return
+        
+        # Compute cumulative capital over time
+        capital_history = [initial_capital]
+        for ret in returns:
+            capital_history.append(capital_history[-1] * (1 + ret / 100.0))
+        
+        # Create a bar chart with uniform bar width
+        fig = go.Figure()
+
+        fig.add_trace(go.Bar(
+            x=list(range(len(capital_history))),
+            y=capital_history,
+            width=[bar_width] * len(capital_history),
+            text=[f"{cap:.2f}" for cap in capital_history],
+            textposition='outside',
+        ))
+
+        # Update layout for better visualization
+        fig.update_layout(
+            title="Asset Value After Each Transaction",
+            xaxis_title="Transaction Dates",
+            yaxis_title="Capital (VND)",
+            showlegend=False,
+        )
+
+        fig.show()
+
+    # Modify backtest_strategy to store returns and call plot_returns
     def backtest_strategy(self, data_test, capital=100000):
         if data_test is None or data_test.empty:
             print("No data available for backtesting.")
@@ -188,12 +221,12 @@ class Backtesting:
         for i in range(2, len(data_test)):
             sma_diff_prev = data_test["SMA50"].iloc[i-1] - data_test["SMA200"].iloc[i-1]
             sma_diff_now = data_test["SMA50"].iloc[i] - data_test["SMA200"].iloc[i]
-            
+
             if sma_diff_prev < 0 and sma_diff_now > 0:
                 trend = "up"
             elif sma_diff_prev > 0 and sma_diff_now < 0:
                 trend = "down"
-            
+
             if position == 0 and trend:
                 if trend == "up" and (data_test["RSI"].iloc[i] < 10 or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i]):
                     position = 1
@@ -201,7 +234,7 @@ class Backtesting:
                 elif trend == "down" and (data_test["RSI"].iloc[i] > 90 or data_test["close"].iloc[i] >= data_test["BB_Upper"].iloc[i]):
                     position = -1
                     entry_price = data_test["close"].iloc[i]
-            
+
             elif position == 1:
                 if data_test["RSI"].iloc[i] > 90 or data_test["close"].iloc[i] >= data_test["BB_Upper"].iloc[i]:
                     profit = float((data_test["close"].iloc[i] - entry_price) / entry_price * 100)
@@ -219,7 +252,6 @@ class Backtesting:
         total_return = sum(returns)
         win_rate = len([x for x in returns if x > 0]) / len(returns) * 100 if returns else 0
         max_drawdown = min(returns) if returns else 0
-        
         sharpe_ratio = float(np.mean(returns)) / (float(np.std(returns)) + 1e-10) if returns else 0
 
         print(f" Final Capital: {capital:.2f} VND")
@@ -227,6 +259,9 @@ class Backtesting:
         print(f" Win Rate: {win_rate:.2f}%")
         print(f" Max Drawdown: {max_drawdown:.2f}%")
         print(f" Sharpe Ratio: {sharpe_ratio:.2f}")
+        
+        # Call the plotting function
+        self.plot_returns(returns, initial_capital=100000)
 
     #Split the test case into in-sample (80%) and out-sample (20%)
     def run_backtest(self):
