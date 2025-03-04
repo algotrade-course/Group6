@@ -176,37 +176,54 @@ class Backtesting:
         fig.show()
 
 
-    def plot_returns(self, returns, initial_capital=100000, bar_width=0.3):
-        if not returns:
-            print("No transactions recorded. Cannot plot returns.")
+    def plot_returns(self, returns, closing_dates, data_test, initial_capital=100000):
+        if not returns or not closing_dates or data_test is None or data_test.empty:
+            print("No transactions recorded or no data available. Cannot plot returns.")
             return
-        
+
+        # Get the first date in data_test as the starting date
+        start_date = pd.to_datetime(data_test["date"].iloc[0])
+
         # Compute cumulative capital over time
         capital_history = [initial_capital]
         for ret in returns:
             capital_history.append(capital_history[-1] * (1 + ret / 100.0))
-        
-        # Create a bar chart with uniform bar width
+
+        # Ensure closing_dates aligns with returns
+        if len(closing_dates) != len(returns):
+            print("Mismatch between closing dates and returns. Check data consistency.")
+            return
+
+        # Convert closing_dates to datetime format
+        closing_dates = pd.to_datetime(closing_dates)
+
+        # Insert the start date at the beginning
+        closing_dates = [start_date] + list(closing_dates)
+
+        # Create a line chart
         fig = go.Figure()
 
-        fig.add_trace(go.Bar(
-            x=list(range(len(capital_history))),
-            y=capital_history,
-            width=[bar_width] * len(capital_history),
+        fig.add_trace(go.Scatter(
+            x=closing_dates,  
+            y=capital_history,  
+            mode="lines+markers",
+            line=dict(color="green", width=2),
+            marker=dict(size=6, symbol="circle"),
             text=[f"{cap:.2f}" for cap in capital_history],
-            textposition='outside',
-            marker={"color" : "green"}
+            textposition="top center"
         ))
 
         # Update layout for better visualization
         fig.update_layout(
-            title="Asset Value After Each Transaction",
-            xaxis_title="Transaction Dates",
+            title="Portfolio Capital Over Time",
+            xaxis_title="Closing Position Dates",
             yaxis_title="Capital (VND)",
+            xaxis=dict(type="date"),
             showlegend=False,
         )
 
         fig.show()
+
 
     # Modify backtest_strategy to store returns and call plot_returns
     def backtest_strategy(self, data_test, capital=100000):
@@ -217,6 +234,7 @@ class Backtesting:
         position = 0
         entry_price = 0
         returns = []
+        closing_dates = []  # Track closing position dates
         trend = None
 
         for i in range(2, len(data_test)):
@@ -241,6 +259,7 @@ class Backtesting:
                     profit = float((data_test["close"].iloc[i] - entry_price) / entry_price * 100)
                     capital += capital * (profit / 100.0)
                     returns.append(profit)
+                    closing_dates.append(data_test["date"].iloc[i])  # Save closing date
                     position = 0
 
             elif position == -1:
@@ -248,28 +267,26 @@ class Backtesting:
                     profit = float((entry_price - data_test["close"].iloc[i]) / entry_price * 100)
                     capital += capital * (profit / 100.0)
                     returns.append(profit)
+                    closing_dates.append(data_test["date"].iloc[i])  # Save closing date
                     position = 0
 
-        total_return = sum(returns)
-        win_rate = len([x for x in returns if x > 0]) / len(returns) * 100 if returns else 0
-        max_drawdown = min(returns) if returns else 0
-        sharpe_ratio = float(np.mean(returns)) / (float(np.std(returns)) + 1e-10) if returns else 0
-
         print(f" Final Capital: {capital:.2f} VND")
-        print(f" Total Return: {total_return:.2f}%")
-        print(f" Win Rate: {win_rate:.2f}%")
-        print(f" Max Drawdown: {max_drawdown:.2f}%")
-        print(f" Sharpe Ratio: {sharpe_ratio:.2f}")
-        
-        # Call the plotting function
-        self.plot_returns(returns, initial_capital=100000)
+        print(f" Total Return: {sum(returns):.2f}%")
+        print(f" Win Rate: {len([x for x in returns if x > 0]) / len(returns) * 100:.2f}%" if returns else "Win Rate: 0%")
+        print(f" Max Drawdown: {min(returns):.2f}%" if returns else "Max Drawdown: 0%")
+        print(f" Sharpe Ratio: {np.mean(returns) / (np.std(returns) + 1e-10):.2f}" if returns else "Sharpe Ratio: 0")
+
+        # Plot returns with actual closing dates
+        self.plot_returns(returns, closing_dates, data_test, initial_capital=100000)
+
     
+    # No MA200 and MA50 crossing
     def backtest_strategy_2(self, data_test, capital=100000):
         if data_test is None or data_test.empty:
             print("No data available for backtesting.")
             return
  
-        # 🔥 Fix NaN & Type Issues
+        # Fix NaN & Type Issues
         data_test.dropna(inplace=True)
         data_test["RSI"] = pd.to_numeric(data_test["RSI"], errors='coerce')
         data_test["BB_Lower"] = pd.to_numeric(data_test["BB_Lower"], errors='coerce')
