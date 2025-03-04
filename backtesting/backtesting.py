@@ -82,7 +82,7 @@ class Backtesting:
         self.data = self.calculate_sma(200)
         self.data.reset_index(inplace=True)
         self.data["index"] = self.data.index 
-        
+        pprint.pp(self.data[:20])
         return self.data
 
     def split_data(self, train_size=0.8):
@@ -287,7 +287,7 @@ class Backtesting:
             return
 
         # Fix NaN & Type Issues
-        data_test.dropna(inplace=True)
+        # data_test.dropna(inplace=True)
         data_test["RSI"] = pd.to_numeric(data_test["RSI"], errors='coerce')
         data_test["BB_Lower"] = pd.to_numeric(data_test["BB_Lower"], errors='coerce')
         data_test["BB_Upper"] = pd.to_numeric(data_test["BB_Upper"], errors='coerce')
@@ -358,7 +358,7 @@ class Backtesting:
     def run_backtest_2(self):
         print("\n--- Running Backtest (100%) ---")
         self.backtest_strategy_2(self.data)
-        
+
         print("\n--- Split data ---")
         self.split_data()
 
