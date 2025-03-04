@@ -85,7 +85,7 @@ class Backtesting:
         pprint.pp(self.data[:20])
         return self.data
 
-    def split_data(self, train_size=0.8):
+    def split_data(self, train_size=0.7):
         if self.data is None or self.data.empty:
             raise ValueError("No data available to split.")
         
