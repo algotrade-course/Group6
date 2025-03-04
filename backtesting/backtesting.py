@@ -320,7 +320,20 @@ class Backtesting:
     #Split the test case into in-sample (80%) and out-sample (20%)
     def run_backtest(self):
         print("\n--- Running Backtest (100%) ---")
-        self.backtest_strategy_2(self.data)
+        self.backtest_strategy(self.data)
+
+        print("\n--- Split data ---")
+        self.split_data()
+
+        print("\n--- Running In-Sample Backtest (70%) ---")
+        self.backtest_strategy(self.train_data)
+        
+        print("\n--- Running Out-of-Sample Backtest (30%) ---")
+        self.backtest_strategy(self.test_data)
+
+    def run_backtest_2(self):
+        print("\n--- Running Backtest (100%) ---")
+        self.backtest_strategy(self.data)
 
         print("\n--- Split data ---")
         self.split_data()
