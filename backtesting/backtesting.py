@@ -175,47 +175,30 @@ class Backtesting:
         fig.show()
 
 
-    def plot_returns(self, returns, closing_dates, data_test, initial_capital=100000):
-        if not returns or not closing_dates or data_test is None or data_test.empty:
-            print("No transactions recorded or no data available. Cannot plot returns.")
+    def plot_returns(self, capital_df):
+        if capital_df is None or capital_df.empty:
+            print("No capital data available. Cannot plot returns.")
             return
 
-        # Get the first date in data_test as the starting date
-        start_date = pd.to_datetime(data_test["date"].iloc[0])
+        # Convert date column to datetime format
+        capital_df["date"] = pd.to_datetime(capital_df["date"])
 
-        # Compute cumulative capital over time
-        capital_history = [initial_capital]
-        for ret in returns:
-            capital_history.append(capital_history[-1] * (1 + ret / 100.0))
-
-        # Ensure closing_dates aligns with returns
-        if len(closing_dates) != len(returns):
-            print("Mismatch between closing dates and returns. Check data consistency.")
-            return
-
-        # Convert closing_dates to datetime format
-        closing_dates = pd.to_datetime(closing_dates)
-
-        # Insert the start date at the beginning
-        closing_dates = [start_date] + list(closing_dates)
-
-        # Create a line chart
+        # Create a line chart using Plotly
         fig = go.Figure()
 
         fig.add_trace(go.Scatter(
-            x=closing_dates,  
-            y=capital_history,  
-            mode="lines+markers",
-            line=dict(color="green", width=2),
-            marker=dict(size=6, symbol="circle"),
-            text=[f"{cap:.2f}" for cap in capital_history],
+            x=capital_df["date"],  
+            y=capital_df["capital"],  
+            mode="lines",
+            line=dict(color="blue", width=2),
+            text=[f"{cap:.2f}" for cap in capital_df["capital"]],
             textposition="top center"
         ))
 
         # Update layout for better visualization
         fig.update_layout(
             title="Portfolio Capital Over Time",
-            xaxis_title="Closing Position Dates",
+            xaxis_title="Date",
             yaxis_title="Capital (VND)",
             xaxis=dict(type="date"),
             showlegend=False,
@@ -236,8 +219,10 @@ class Backtesting:
         closing_dates = []  # Track closing position dates
         trend = None
         initial_capital = capital
+        capital_map = {}  # Dictionary to record capital at every date
 
         for i in range(2, len(data_test)):
+            current_date = data_test["date"].iloc[i]  # Get current date
             sma_diff_prev = data_test["SMA50"].iloc[i-1] - data_test["SMA200"].iloc[i-1]
             sma_diff_now = data_test["SMA50"].iloc[i] - data_test["SMA200"].iloc[i]
 
@@ -259,7 +244,7 @@ class Backtesting:
                     profit = float((data_test["close"].iloc[i] - entry_price) / entry_price * 100)
                     capital += capital * (profit / 100.0)
                     returns.append(profit)
-                    closing_dates.append(data_test["date"].iloc[i])  # Save closing date
+                    closing_dates.append(current_date)  # Save closing date
                     position = 0
 
             elif position == -1:
@@ -267,8 +252,19 @@ class Backtesting:
                     profit = float((entry_price - data_test["close"].iloc[i]) / entry_price * 100)
                     capital += capital * (profit / 100.0)
                     returns.append(profit)
-                    closing_dates.append(data_test["date"].iloc[i])  # Save closing date
+                    closing_dates.append(current_date)  # Save closing date
                     position = 0
+
+            # Record capital at each date
+            capital_map[current_date] = capital
+
+        # Fill missing dates in capital_map
+        full_date_range = pd.date_range(start=data_test["date"].min(), end=data_test["date"].max(), freq="D")
+        capital_series = pd.Series(capital_map, index=full_date_range).ffill()  # Forward-fill missing dates
+
+        # Convert to DataFrame
+        capital_df = capital_series.reset_index()
+        capital_df.columns = ["date", "capital"]
 
         total_returns = (capital / initial_capital) * 100 - 100
         print(f" Final Capital: {capital:.2f} VND")
@@ -278,7 +274,10 @@ class Backtesting:
         print(f" Sharpe Ratio: {np.mean(returns) / (np.std(returns) + 1e-10):.2f}" if returns else "Sharpe Ratio: 0")
 
         # Plot returns with actual closing dates
-        self.plot_returns(returns, closing_dates, data_test, initial_capital=100000)
+        self.plot_returns(capital_df)
+
+        return capital_df  # Return DataFrame with filled missing dates
+
 
     
     # No MA200 and MA50 crossing
