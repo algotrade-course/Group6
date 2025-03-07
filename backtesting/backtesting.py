@@ -287,7 +287,6 @@ class Backtesting:
             return
 
         # Fix NaN & Type Issues
-        # data_test.dropna(inplace=True)
         data_test["RSI"] = pd.to_numeric(data_test["RSI"], errors='coerce')
         data_test["BB_Lower"] = pd.to_numeric(data_test["BB_Lower"], errors='coerce')
         data_test["BB_Upper"] = pd.to_numeric(data_test["BB_Upper"], errors='coerce')
@@ -298,8 +297,11 @@ class Backtesting:
         returns = []
         closing_dates = []  
         initial_capital = capital
+        capital_map = {}  # Dictionary to track capital over time
 
         for i in range(1, len(data_test)):
+            current_date = data_test["date"].iloc[i]  # Get the current date
+
             if position == 0:
                 if data_test["RSI"].iloc[i] < 25 or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i]:
                     position = 1  # Open Long
@@ -314,7 +316,7 @@ class Backtesting:
                     profit = (data_test["close"].iloc[i] - entry_price) / entry_price * 100
                     capital += capital * (profit / 100)
                     returns.append(profit)
-                    closing_dates.append(data_test["date"].iloc[i])  
+                    closing_dates.append(current_date)
                     position = 0
 
             elif position == -1:  # Close Short
@@ -322,25 +324,38 @@ class Backtesting:
                     profit = (entry_price - data_test["close"].iloc[i]) / entry_price * 100
                     capital += capital * (profit / 100)
                     returns.append(profit)
-                    closing_dates.append(data_test["date"].iloc[i])  
+                    closing_dates.append(current_date)
                     position = 0    
 
+            # Record capital for this date
+            capital_map[current_date] = capital
+
+        # Fill missing dates with previous capital value
+        full_date_range = pd.date_range(start=data_test["date"].min(), end=data_test["date"].max(), freq="D")
+        capital_series = pd.Series(capital_map, index=full_date_range).ffill()  # Forward-fill missing values
+
+        # Convert to DataFrame
+        capital_df = capital_series.reset_index()
+        capital_df.columns = ["date", "capital"]
+
+        # Performance Metrics
         total_returns = (capital / initial_capital) * 100 - 100
         win_rate = len([x for x in returns if x > 0]) / len(returns) * 100 if returns else 0
         max_drawdown = min(returns) if returns else 0
         sharpe_ratio = float(np.mean(returns)) / (float(np.std(returns)) + 1e-10) if returns else 0
 
+        # Print Results
         print(f" Final Capital: {capital:.2f} VND")
         print(f" Total Return: {total_returns:.2f}%")
         print(f" Win Rate: {win_rate:.2f}%")
         print(f" Max Drawdown: {max_drawdown:.2f}%")
         print(f" Sharpe Ratio: {sharpe_ratio:.2f}")
 
-        # Get the first date in data_test as the starting date
-        start_date = pd.to_datetime(data_test["date"].iloc[0])
+        # Plot capital over time
+        self.plot_returns(capital_df)
 
-        # Call the updated plotting function
-        self.plot_returns(returns, closing_dates, data_test, initial_capital=capital)
+        return capital_df  # Return DataFrame with complete capital history
+
 
     #Split the test case into in-sample (80%) and out-sample (20%)
     def run_backtest(self):
