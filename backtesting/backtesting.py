@@ -95,7 +95,6 @@ class Backtesting:
         
         print(f"Data split: {len(self.train_data)} (train), {len(self.test_data)} (test)")
 
-    
     def plot_chart(self):
         if self.data is None or self.data.empty:
             print("No data available for plotting.")
@@ -236,6 +235,7 @@ class Backtesting:
         returns = []
         closing_dates = []  # Track closing position dates
         trend = None
+        initial_capital = capital
 
         for i in range(2, len(data_test)):
             sma_diff_prev = data_test["SMA50"].iloc[i-1] - data_test["SMA200"].iloc[i-1]
@@ -270,8 +270,9 @@ class Backtesting:
                     closing_dates.append(data_test["date"].iloc[i])  # Save closing date
                     position = 0
 
+        total_returns = (capital / initial_capital) * 100 - 100
         print(f" Final Capital: {capital:.2f} VND")
-        print(f" Total Return: {sum(returns):.2f}%")
+        print(f" Total Return: {total_returns:.2f}%")
         print(f" Win Rate: {len([x for x in returns if x > 0]) / len(returns) * 100:.2f}%" if returns else "Win Rate: 0%")
         print(f" Max Drawdown: {min(returns):.2f}%" if returns else "Max Drawdown: 0%")
         print(f" Sharpe Ratio: {np.mean(returns) / (np.std(returns) + 1e-10):.2f}" if returns else "Sharpe Ratio: 0")
@@ -297,6 +298,7 @@ class Backtesting:
         entry_price = 0
         returns = []
         closing_dates = []  
+        initial_capital = capital
 
         for i in range(1, len(data_test)):
             if position == 0:
@@ -324,13 +326,13 @@ class Backtesting:
                     closing_dates.append(data_test["date"].iloc[i])  
                     position = 0    
 
-        total_return = sum(returns)
+        total_returns = (capital / initial_capital) * 100 - 100
         win_rate = len([x for x in returns if x > 0]) / len(returns) * 100 if returns else 0
         max_drawdown = min(returns) if returns else 0
         sharpe_ratio = float(np.mean(returns)) / (float(np.std(returns)) + 1e-10) if returns else 0
 
         print(f" Final Capital: {capital:.2f} VND")
-        print(f" Total Return: {total_return:.2f}%")
+        print(f" Total Return: {total_returns:.2f}%")
         print(f" Win Rate: {win_rate:.2f}%")
         print(f" Max Drawdown: {max_drawdown:.2f}%")
         print(f" Sharpe Ratio: {sharpe_ratio:.2f}")

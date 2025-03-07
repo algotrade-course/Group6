@@ -1,130 +1,73 @@
 daily_data_query = """
+WITH date_ranges AS (
+    SELECT 'VN30F2101' AS tickersymbol, '2021-01-04'::DATE AS start_date, '2021-01-14'::DATE AS end_date UNION ALL
+    SELECT 'VN30F2102', '2021-01-15'::DATE, '2021-02-18'::DATE UNION ALL
+    SELECT 'VN30F2103', '2021-02-19'::DATE, '2021-03-18'::DATE UNION ALL
+    SELECT 'VN30F2104', '2021-03-19'::DATE, '2021-04-15'::DATE UNION ALL
+    SELECT 'VN30F2105', '2021-04-16'::DATE, '2021-05-20'::DATE UNION ALL
+    SELECT 'VN30F2106', '2021-05-21'::DATE, '2021-06-17'::DATE UNION ALL
+    SELECT 'VN30F2107', '2021-06-18'::DATE, '2021-07-15'::DATE UNION ALL
+    SELECT 'VN30F2108', '2021-07-16'::DATE, '2021-08-19'::DATE UNION ALL
+    SELECT 'VN30F2109', '2021-08-20'::DATE, '2021-09-16'::DATE UNION ALL
+    SELECT 'VN30F2110', '2021-09-17'::DATE, '2021-10-21'::DATE UNION ALL
+    SELECT 'VN30F2111', '2021-10-22'::DATE, '2021-11-18'::DATE UNION ALL
+    SELECT 'VN30F2112', '2021-11-19'::DATE, '2021-12-16'::DATE UNION ALL
+    SELECT 'VN30F2201', '2021-12-17'::DATE, '2022-01-20'::DATE UNION ALL
+    SELECT 'VN30F2202', '2022-01-21'::DATE, '2022-02-17'::DATE UNION ALL
+    SELECT 'VN30F2203', '2022-02-18'::DATE, '2022-03-17'::DATE UNION ALL
+    SELECT 'VN30F2204', '2022-03-18'::DATE, '2022-04-21'::DATE UNION ALL
+    SELECT 'VN30F2205', '2022-04-22'::DATE, '2022-05-19'::DATE UNION ALL
+    SELECT 'VN30F2206', '2022-05-20'::DATE, '2022-06-16'::DATE UNION ALL
+    SELECT 'VN30F2207', '2022-06-17'::DATE, '2022-07-21'::DATE UNION ALL
+    SELECT 'VN30F2208', '2022-07-22'::DATE, '2022-08-18'::DATE UNION ALL
+    SELECT 'VN30F2209', '2022-08-19'::DATE, '2022-09-15'::DATE UNION ALL
+    SELECT 'VN30F2210', '2022-09-16'::DATE, '2022-10-20'::DATE UNION ALL
+    SELECT 'VN30F2211', '2022-10-21'::DATE, '2022-11-17'::DATE UNION ALL
+    SELECT 'VN30F2212', '2022-11-18'::DATE, '2022-12-15'::DATE UNION ALL
+    SELECT 'VN30F2301', '2022-12-16'::DATE, '2023-01-19'::DATE UNION ALL
+    SELECT 'VN30F2302', '2023-01-20'::DATE, '2023-02-16'::DATE UNION ALL
+    SELECT 'VN30F2303', '2023-02-17'::DATE, '2023-03-16'::DATE UNION ALL
+    SELECT 'VN30F2304', '2023-03-17'::DATE, '2023-04-20'::DATE UNION ALL
+    SELECT 'VN30F2305', '2023-04-21'::DATE, '2023-05-18'::DATE UNION ALL
+    SELECT 'VN30F2306', '2023-05-19'::DATE, '2023-06-15'::DATE UNION ALL
+    SELECT 'VN30F2307', '2023-06-16'::DATE, '2023-07-20'::DATE UNION ALL
+    SELECT 'VN30F2308', '2023-07-21'::DATE, '2023-08-17'::DATE UNION ALL
+    SELECT 'VN30F2309', '2023-08-18'::DATE, '2023-09-21'::DATE UNION ALL
+    SELECT 'VN30F2310', '2023-09-22'::DATE, '2023-10-19'::DATE UNION ALL
+    SELECT 'VN30F2311', '2023-10-20'::DATE, '2023-11-16'::DATE UNION ALL
+    SELECT 'VN30F2312', '2023-11-17'::DATE, '2023-12-21'::DATE UNION ALL
+    SELECT 'VN30F2401', '2023-12-22'::DATE, '2024-01-18'::DATE UNION ALL
+    SELECT 'VN30F2402', '2024-01-19'::DATE, '2024-02-15'::DATE UNION ALL
+    SELECT 'VN30F2403', '2024-02-16'::DATE, '2024-03-21'::DATE UNION ALL
+    SELECT 'VN30F2404', '2024-03-22'::DATE, '2024-04-18'::DATE UNION ALL
+    SELECT 'VN30F2405', '2024-04-19'::DATE, '2024-05-16'::DATE UNION ALL
+    SELECT 'VN30F2406', '2024-05-17'::DATE, '2024-06-20'::DATE UNION ALL
+    SELECT 'VN30F2407', '2024-06-21'::DATE, '2024-07-18'::DATE UNION ALL
+    SELECT 'VN30F2408', '2024-07-19'::DATE, '2024-08-15'::DATE UNION ALL
+    SELECT 'VN30F2409', '2024-08-16'::DATE, '2024-09-19'::DATE UNION ALL
+    SELECT 'VN30F2410', '2024-09-20'::DATE, '2024-10-17'::DATE UNION ALL
+    SELECT 'VN30F2411', '2024-10-18'::DATE, '2024-11-21'::DATE UNION ALL
+    SELECT 'VN30F2412', '2024-11-22'::DATE, '2024-12-19'::DATE
+)
 SELECT 
-    tb_max.datetime AS datetime, 
+    tb_max.datetime, 
     tb_max.tickersymbol AS symbol,
     tb_max.price AS max,
     tb_min.price AS min,
     tb_close.price AS close,
     tb_open.price AS open
-
-FROM (
-    SELECT * FROM quote.max m
-) tb_max
-
-INNER JOIN (
-    SELECT * FROM quote.min m
-) tb_min
-ON tb_max.tickersymbol = tb_min.tickersymbol
-AND tb_max.datetime = tb_min.datetime
-
-INNER JOIN (
-    SELECT * FROM quote.close m
-) tb_close
-ON tb_min.tickersymbol = tb_close.tickersymbol
-AND tb_min.datetime = tb_close.datetime
-
-INNER JOIN (
-    SELECT * FROM quote.open m
-) tb_open
-ON tb_open.tickersymbol = tb_close.tickersymbol
-AND tb_open.datetime = tb_close.datetime
-
-WHERE 
-    (tb_max.tickersymbol = 'VN30F2101' AND tb_max.datetime BETWEEN '2021-01-04' AND '2021-01-14')
-OR 
-    (tb_max.tickersymbol = 'VN30F2102' AND tb_max.datetime BETWEEN '2021-01-15' AND '2021-02-18')
-OR 
-    (tb_max.tickersymbol = 'VN30F2103' AND tb_max.datetime BETWEEN '2021-02-19' AND '2021-03-18')
-OR
-    (tb_max.tickersymbol = 'VN30F2104' AND tb_max.datetime BETWEEN '2021-03-19' AND '2021-04-15')
-OR
-    (tb_max.tickersymbol = 'VN30F2105' AND tb_max.datetime BETWEEN '2021-04-16' AND '2021-05-20')
-OR
-    (tb_max.tickersymbol = 'VN30F2106' AND tb_max.datetime BETWEEN '2021-05-21' AND '2021-06-17')
-OR
-    (tb_max.tickersymbol = 'VN30F2107' AND tb_max.datetime BETWEEN '2021-06-18' AND '2021-07-15')
-OR
-    (tb_max.tickersymbol = 'VN30F2108' AND tb_max.datetime BETWEEN '2021-07-16' AND '2021-08-19')
-OR
-    (tb_max.tickersymbol = 'VN30F2109' AND tb_max.datetime BETWEEN '2021-08-20' AND '2021-09-16')
-OR
-    (tb_max.tickersymbol = 'VN30F2110' AND tb_max.datetime BETWEEN '2021-09-17' AND '2021-10-21')
-OR
-    (tb_max.tickersymbol = 'VN30F2111' AND tb_max.datetime BETWEEN '2021-10-22' AND '2021-11-18')
-OR
-    (tb_max.tickersymbol = 'VN30F2112' AND tb_max.datetime BETWEEN '2021-11-19' AND '2021-12-16')
-OR
-    (tb_max.tickersymbol = 'VN30F2201' AND tb_max.datetime BETWEEN '2021-12-17' AND '2022-01-20')
-OR
-    (tb_max.tickersymbol = 'VN30F2202' AND tb_max.datetime BETWEEN '2022-01-21' AND '2022-02-17')
-OR
-    (tb_max.tickersymbol = 'VN30F2203' AND tb_max.datetime BETWEEN '2022-02-18' AND '2022-03-17')
-OR
-    (tb_max.tickersymbol = 'VN30F2204' AND tb_max.datetime BETWEEN '2022-03-18' AND '2022-04-21')
-OR
-    (tb_max.tickersymbol = 'VN30F2205' AND tb_max.datetime BETWEEN '2022-04-22' AND '2022-05-19')
-OR
-    (tb_max.tickersymbol = 'VN30F2206' AND tb_max.datetime BETWEEN '2022-05-20' AND '2022-06-16')
-OR
-    (tb_max.tickersymbol = 'VN30F2207' AND tb_max.datetime BETWEEN '2022-06-17' AND '2022-07-21')
-OR
-    (tb_max.tickersymbol = 'VN30F2208' AND tb_max.datetime BETWEEN '2022-07-22' AND '2022-08-18')
-OR
-    (tb_max.tickersymbol = 'VN30F2209' AND tb_max.datetime BETWEEN '2022-08-19' AND '2022-09-15')
-OR
-    (tb_max.tickersymbol = 'VN30F2210' AND tb_max.datetime BETWEEN '2022-09-16' AND '2022-10-20')
-OR
-    (tb_max.tickersymbol = 'VN30F2211' AND tb_max.datetime BETWEEN '2022-10-21' AND '2022-11-17')
-OR
-    (tb_max.tickersymbol = 'VN30F2212' AND tb_max.datetime BETWEEN '2022-11-18' AND '2022-12-15')
-OR
-    (tb_max.tickersymbol = 'VN30F2301' AND tb_max.datetime BETWEEN '2022-12-16' AND '2023-01-19')
-OR
-    (tb_max.tickersymbol = 'VN30F2302' AND tb_max.datetime BETWEEN '2023-01-20' AND '2023-02-16')
-OR
-    (tb_max.tickersymbol = 'VN30F2303' AND tb_max.datetime BETWEEN '2023-02-17' AND '2023-03-16')
-OR
-    (tb_max.tickersymbol = 'VN30F2304' AND tb_max.datetime BETWEEN '2023-03-17' AND '2023-04-20')
-OR
-    (tb_max.tickersymbol = 'VN30F2305' AND tb_max.datetime BETWEEN '2023-04-21' AND '2023-05-18')
-OR
-    (tb_max.tickersymbol = 'VN30F2306' AND tb_max.datetime BETWEEN '2023-05-19' AND '2023-06-15')
-OR
-    (tb_max.tickersymbol = 'VN30F2307' AND tb_max.datetime BETWEEN '2023-06-16' AND '2023-07-20')
-OR
-    (tb_max.tickersymbol = 'VN30F2308' AND tb_max.datetime BETWEEN '2023-07-21' AND '2023-08-17')
-OR
-    (tb_max.tickersymbol = 'VN30F2309' AND tb_max.datetime BETWEEN '2023-08-18' AND '2023-09-21')
-OR
-    (tb_max.tickersymbol = 'VN30F2310' AND tb_max.datetime BETWEEN '2023-09-22' AND '2023-10-19')
-OR
-    (tb_max.tickersymbol = 'VN30F2311' AND tb_max.datetime BETWEEN '2023-10-20' AND '2023-11-16')
-OR
-    (tb_max.tickersymbol = 'VN30F2312' AND tb_max.datetime BETWEEN '2023-11-17' AND '2023-12-21')
-OR
-    (tb_max.tickersymbol = 'VN30F2401' AND tb_max.datetime BETWEEN '2023-12-22' AND '2024-01-18')
-OR
-    (tb_max.tickersymbol = 'VN30F2402' AND tb_max.datetime BETWEEN '2024-01-19' AND '2024-02-15')
-OR
-    (tb_max.tickersymbol = 'VN30F2403' AND tb_max.datetime BETWEEN '2024-02-16' AND '2024-03-21')
-OR
-    (tb_max.tickersymbol = 'VN30F2404' AND tb_max.datetime BETWEEN '2024-03-22' AND '2024-04-18')
-OR
-    (tb_max.tickersymbol = 'VN30F2405' AND tb_max.datetime BETWEEN '2024-04-19' AND '2024-05-16')
-OR
-    (tb_max.tickersymbol = 'VN30F2406' AND tb_max.datetime BETWEEN '2024-05-17' AND '2024-06-20')
-OR
-    (tb_max.tickersymbol = 'VN30F2407' AND tb_max.datetime BETWEEN '2024-06-21' AND '2024-07-18')
-OR
-    (tb_max.tickersymbol = 'VN30F2408' AND tb_max.datetime BETWEEN '2024-07-19' AND '2024-08-15')
-OR
-    (tb_max.tickersymbol = 'VN30F2409' AND tb_max.datetime BETWEEN '2024-08-16' AND '2024-09-19')
-OR
-    (tb_max.tickersymbol = 'VN30F2410' AND tb_max.datetime BETWEEN '2024-09-20' AND '2024-10-17')
-OR
-    (tb_max.tickersymbol = 'VN30F2411' AND tb_max.datetime BETWEEN '2024-10-18' AND '2024-11-21')
-OR
-    (tb_max.tickersymbol = 'VN30F2412' AND tb_max.datetime BETWEEN '2024-11-22' AND '2024-12-19')
-
-ORDER BY tb_max.datetime ASC;
+FROM quote.max tb_max
+JOIN quote.min tb_min 
+    ON tb_max.tickersymbol = tb_min.tickersymbol 
+    AND tb_max.datetime = tb_min.datetime
+JOIN quote.close tb_close 
+    ON tb_min.tickersymbol = tb_close.tickersymbol 
+    AND tb_min.datetime = tb_close.datetime
+JOIN quote.open tb_open 
+    ON tb_open.tickersymbol = tb_close.tickersymbol 
+    AND tb_open.datetime = tb_close.datetime
+JOIN date_ranges dr
+    ON tb_max.tickersymbol = dr.tickersymbol 
+    AND tb_max.datetime BETWEEN dr.start_date AND dr.end_date
+ORDER BY tb_max.datetime ASC, tb_max.tickersymbol ASC;
 """
