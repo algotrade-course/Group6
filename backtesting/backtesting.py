@@ -82,7 +82,7 @@ class Backtesting:
         self.data = self.calculate_sma(200)
         self.data.reset_index(inplace=True)
         self.data["index"] = self.data.index 
-        pprint.pp(self.data[:20])
+        # pprint.pp(self.data[:20])
         return self.data
 
     def split_data(self, train_size=0.7):
@@ -174,7 +174,6 @@ class Backtesting:
         
         fig.show()
 
-
     def plot_returns(self, capital_df):
         if capital_df is None or capital_df.empty:
             print("No capital data available. Cannot plot returns.")
@@ -206,7 +205,6 @@ class Backtesting:
 
         fig.show()
 
-
     # Modify backtest_strategy to store returns and call plot_returns
     def backtest_strategy(self, data_test, capital=100000):
         if data_test is None or data_test.empty:
@@ -232,15 +230,18 @@ class Backtesting:
                 trend = "down"
 
             if position == 0 and trend:
-                if trend == "up" and (data_test["RSI"].iloc[i] < 10 or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i]):
+                # Open long
+                if trend == "up" and (data_test["RSI"].iloc[i] < 40 or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i]):
                     position = 1
                     entry_price = data_test["close"].iloc[i]
-                elif trend == "down" and (data_test["RSI"].iloc[i] > 90 or data_test["close"].iloc[i] >= data_test["BB_Upper"].iloc[i]):
+                # Open short
+                elif trend == "down" and (data_test["RSI"].iloc[i] > 70 or data_test["close"].iloc[i] >= data_test["BB_Upper"].iloc[i]):
                     position = -1
                     entry_price = data_test["close"].iloc[i]
 
             elif position == 1:
-                if data_test["RSI"].iloc[i] > 90 or data_test["close"].iloc[i] >= data_test["BB_Upper"].iloc[i]:
+                # Close long
+                if data_test["RSI"].iloc[i] > 70 or data_test["close"].iloc[i] >= data_test["BB_Upper"].iloc[i]:
                     profit = float((data_test["close"].iloc[i] - entry_price) / entry_price * 100)
                     capital += capital * (profit / 100.0)
                     returns.append(profit)
@@ -248,7 +249,8 @@ class Backtesting:
                     position = 0
 
             elif position == -1:
-                if data_test["RSI"].iloc[i] < 25 or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i]:
+                # Close short
+                if data_test["RSI"].iloc[i] < 30 or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i]:
                     profit = float((entry_price - data_test["close"].iloc[i]) / entry_price * 100)
                     capital += capital * (profit / 100.0)
                     returns.append(profit)
@@ -272,14 +274,13 @@ class Backtesting:
         print(f" Win Rate: {len([x for x in returns if x > 0]) / len(returns) * 100:.2f}%" if returns else "Win Rate: 0%")
         print(f" Max Drawdown: {min(returns):.2f}%" if returns else "Max Drawdown: 0%")
         print(f" Sharpe Ratio: {np.mean(returns) / (np.std(returns) + 1e-10):.2f}" if returns else "Sharpe Ratio: 0")
+        print(f" Number of Transactions: {len(closing_dates)}")
 
         # Plot returns with actual closing dates
-        self.plot_returns(capital_df)
+        # self.plot_returns(capital_df)
 
         return capital_df  # Return DataFrame with filled missing dates
 
-
-    
     # No MA200 and MA50 crossing
     def backtest_strategy_2(self, data_test, capital=100000):
         if data_test is None or data_test.empty:
@@ -307,12 +308,12 @@ class Backtesting:
                     position = 1  # Open Long
                     entry_price = data_test["close"].iloc[i]
 
-                elif data_test["RSI"].iloc[i] > 90 or data_test["close"].iloc[i] >= data_test["BB_Upper"].iloc[i]:
+                elif data_test["RSI"].iloc[i] > 75 or data_test["close"].iloc[i] >= data_test["BB_Upper"].iloc[i]:
                     position = -1  # Open Short
                     entry_price = data_test["close"].iloc[i]
 
             elif position == 1:  # Close Long
-                if data_test["RSI"].iloc[i] > 90 or data_test["close"].iloc[i] >= data_test["BB_Upper"].iloc[i]:
+                if data_test["RSI"].iloc[i] > 75 or data_test["close"].iloc[i] >= data_test["BB_Upper"].iloc[i]:
                     profit = (data_test["close"].iloc[i] - entry_price) / entry_price * 100
                     capital += capital * (profit / 100)
                     returns.append(profit)
@@ -350,12 +351,12 @@ class Backtesting:
         print(f" Win Rate: {win_rate:.2f}%")
         print(f" Max Drawdown: {max_drawdown:.2f}%")
         print(f" Sharpe Ratio: {sharpe_ratio:.2f}")
+        print(f" Number of Transactions: {len(closing_dates)}")
 
         # Plot capital over time
-        self.plot_returns(capital_df)
+        # self.plot_returns(capital_df)
 
         return capital_df  # Return DataFrame with complete capital history
-
 
     #Split the test case into in-sample (80%) and out-sample (20%)
     def run_backtest(self):
