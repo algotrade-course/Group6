@@ -18,4 +18,4 @@ backtest.apply_indicators()
 backtest.run_backtest()
 
 # Run plot chart (Still have some problem related to connection)
-# backtest.plot_chart()
+backtest.plot_chart()
