@@ -294,7 +294,7 @@ class Backtesting:
         # Plot returns with actual closing dates
         # self.plot_returns(capital_df)
 
-        return capital_df  # Return DataFrame with filled missing dates
+        return capital_df, len(closing_dates)  # Return DataFrame with filled missing dates
 
     # No MA200 and MA50 crossing
     def backtest_strategy_2(self, data_test, capital=100000):
@@ -371,7 +371,7 @@ class Backtesting:
         # Plot capital over time
         # self.plot_returns(capital_df)
 
-        return capital_df  # Return DataFrame with complete capital history
+        return capital_df, len(closing_dates)  # Return DataFrame with complete capital history
 
     #Split the test case into in-sample (70%) and out-sample (30%)
     def run_backtest(self):
@@ -432,12 +432,11 @@ class Backtesting:
         # Apply first strategy (no SMA50 & SMA200)
         if not data_without_sma.empty:
             print("Applying backtest_strategy_2 (No SMA50 & SMA200)")
-            capital_df_2 = self.backtest_strategy_2(data_without_sma, capital)
+            capital_df_2, number_transactions_2 = self.backtest_strategy_2(data_without_sma, capital)
             print("Transaction after strategy 1")
-            pprint.pp(capital_df_2)
+            pprint.pp(number_transactions_2)
             capital = capital_df_2["capital"].iloc[-1]  # Update capital from last value            
             total_returns += (capital / initial_capital) * 100 - 100
-            total_transactions += len(capital_df_2) - 1  
             returns_list.extend(capital_df_2["capital"].pct_change().dropna().tolist())
         else:
             capital_df_2 = pd.DataFrame(columns=["date", "capital"])
@@ -445,12 +444,11 @@ class Backtesting:
         # Apply second strategy (with SMA50 & SMA200)
         if not data_with_sma.empty:
             print("Applying backtest_strategy (With SMA50 & SMA200)")
-            capital_df_1 = self.backtest_strategy(data_with_sma, capital)
+            capital_df_1, number_transactions_1 = self.backtest_strategy(data_with_sma, capital)
             print("Transaction after strategy 2")
-            pprint.pp(capital_df_1)
+            pprint.pp(number_transactions_1)
             capital = capital_df_1["capital"].iloc[-1]  
             total_returns += (capital / initial_capital) * 100 - 100
-            total_transactions += len(capital_df_1) - 1  
             returns_list.extend(capital_df_1["capital"].pct_change().dropna().tolist())
         else:
             capital_df_1 = pd.DataFrame(columns=["date", "capital"])
@@ -459,9 +457,26 @@ class Backtesting:
         combined_df = pd.concat([capital_df_2, capital_df_1]).sort_values(by="date").reset_index(drop=True)
 
         # Compute final performance metrics
-        win_rate = (sum(x > 0 for x in returns_list) / len(returns_list) * 100) if returns_list else 0
-        max_drawdown = min(returns_list) if returns_list else 0
-        sharpe_ratio = (np.mean(returns_list) / (np.std(returns_list) + 1e-10)) if returns_list else 0
+        total_transactions = number_transactions_1 + number_transactions_2
+
+        # Fix Win Rate
+        if returns_list:
+            win_rate = (sum(x > 0 for x in returns_list) / total_transactions) * 100
+        else:
+            win_rate = 0
+
+        # Fix Sharpe Ratio
+        if returns_list:
+            mean_return = np.mean(returns_list)
+            std_return = np.std(returns_list) + 1e-10  # Avoid division by zero
+            sharpe_ratio = (mean_return * np.sqrt(total_transactions)) / std_return
+        else:
+            sharpe_ratio = 0
+
+        # Calculate Max Drawdown
+        combined_df["peak"] = combined_df["capital"].cummax()
+        combined_df["drawdown"] = (combined_df["peak"] - combined_df["capital"]) / combined_df["peak"]
+        max_drawdown = combined_df["drawdown"].max() * -100  # Convert to percentage
 
         # Print final statistics
         print(f" Final Capital: {capital:.2f} VND")
@@ -469,7 +484,7 @@ class Backtesting:
         print(f" Win Rate: {win_rate:.2f}%")
         print(f" Max Drawdown: {max_drawdown:.2f}%")
         print(f" Sharpe Ratio: {sharpe_ratio:.2f}")
-        print(f" Number of Transactions: {total_transactions}")  
+        print(f" Number of Transactions: {total_transactions}")
 
         self.plot_returns(combined_df)
 
