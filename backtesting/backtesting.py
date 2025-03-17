@@ -286,12 +286,12 @@ class Backtesting:
         capital_df.columns = ["date", "capital"]
 
         total_returns = (capital / initial_capital) * 100 - 100
-        print(f" Final Capital: {capital:.2f} VND")
-        print(f" Total Return: {total_returns:.2f}%")
-        print(f" Win Rate: {len([x for x in returns if x > 0]) / len(returns) * 100:.2f}%" if returns else "Win Rate: 0%")
-        print(f" Max Drawdown: {min(returns):.2f}%" if returns else "Max Drawdown: 0%")
-        print(f" Sharpe Ratio: {np.mean(returns) / (np.std(returns) + 1e-10):.2f}" if returns else "Sharpe Ratio: 0")
-        print(f" Number of Transactions: {len(closing_dates)}")
+        # print(f" Final Capital: {capital:.2f} VND")
+        # print(f" Total Return: {total_returns:.2f}%")
+        # print(f" Win Rate: {len([x for x in returns if x > 0]) / len(returns) * 100:.2f}%" if returns else "Win Rate: 0%")
+        # print(f" Max Drawdown: {min(returns):.2f}%" if returns else "Max Drawdown: 0%")
+        # print(f" Sharpe Ratio: {np.mean(returns) / (np.std(returns) + 1e-10):.2f}" if returns else "Sharpe Ratio: 0")
+        # print(f" Number of Transactions: {len(closing_dates)}")
 
         # Plot returns with actual closing dates
         # self.plot_returns(capital_df)
@@ -365,12 +365,12 @@ class Backtesting:
         sharpe_ratio = float(np.mean(returns)) / (float(np.std(returns)) + 1e-10) if returns else 0
 
         # Print Results
-        print(f" Final Capital: {capital:.2f} VND")
-        print(f" Total Return: {total_returns:.2f}%")
-        print(f" Win Rate: {win_rate:.2f}%")
-        print(f" Max Drawdown: {max_drawdown:.2f}%")
-        print(f" Sharpe Ratio: {sharpe_ratio:.2f}")
-        print(f" Number of Transactions: {len(closing_dates)}")
+        # print(f" Final Capital: {capital:.2f} VND")
+        # print(f" Total Return: {total_returns:.2f}%")
+        # print(f" Win Rate: {win_rate:.2f}%")
+        # print(f" Max Drawdown: {max_drawdown:.2f}%")
+        # print(f" Sharpe Ratio: {sharpe_ratio:.2f}")
+        # print(f" Number of Transactions: {len(closing_dates)}")
 
         # Plot capital over time
         # self.plot_returns(capital_df)
@@ -418,12 +418,8 @@ class Backtesting:
 
         # Ensure sorted order by date
         data_without_sma = data_without_sma.sort_values(by="date")
-        print("Data without SMA")
-        pprint.pp(data_without_sma)
-        
         data_with_sma = data_with_sma.sort_values(by="date")
-        print("Data with SMA")
-        pprint.pp(data_with_sma)
+
 
         # Initialize capital tracking
         initial_capital = capital
@@ -489,7 +485,6 @@ class Backtesting:
         print(f" Number of Transactions: {total_transactions}")
 
         self.plot_returns(combined_df)
-        pprint.pp(combined_df, depth=None)
 
         return combined_df  # Return full capital history
 
