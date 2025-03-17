@@ -210,7 +210,7 @@ class Backtesting:
         if data_test is None or data_test.empty:
             print("No data available for backtesting.")
             return
-
+        
         position = 0
         entry_price = 0
         returns = []
@@ -218,6 +218,7 @@ class Backtesting:
         trend = None
         initial_capital = capital
         capital_map = {}  # Dictionary to record capital at every date
+        capital_map[data_test["date"].iloc[0]] = capital
 
         for i in range(2, len(data_test)):
             current_date = data_test["date"].iloc[i]  # Get current date
@@ -276,6 +277,7 @@ class Backtesting:
             capital_map[current_date] = capital
 
         # Fill missing dates in capital_map
+        
         full_date_range = pd.date_range(start=data_test["date"].min(), end=data_test["date"].max(), freq="D")
         capital_series = pd.Series(capital_map, index=full_date_range).ffill()  # Forward-fill missing dates
 
@@ -314,6 +316,7 @@ class Backtesting:
         closing_dates = []  
         initial_capital = capital
         capital_map = {}  # Dictionary to track capital over time
+        capital_map[data_test["date"].iloc[0]] = capital
 
         for i in range(1, len(data_test)):
             current_date = data_test["date"].iloc[i]  # Get the current date
@@ -345,6 +348,7 @@ class Backtesting:
 
             # Record capital for this date
             capital_map[current_date] = capital
+            
 
         # Fill missing dates with previous capital value
         full_date_range = pd.date_range(start=data_test["date"].min(), end=data_test["date"].max(), freq="D")
@@ -371,7 +375,7 @@ class Backtesting:
         # Plot capital over time
         # self.plot_returns(capital_df)
 
-        return capital_df, len(closing_dates)  # Return DataFrame with complete capital history
+        return capital_df, len(closing_dates) # Return DataFrame with complete capital history
 
     #Split the test case into in-sample (70%) and out-sample (30%)
     def run_backtest(self):
@@ -428,13 +432,13 @@ class Backtesting:
         total_returns = 0
         total_transactions = 0  
         returns_list = []
+        number_transactions_1 = 0
+        number_transactions_2 = 0
 
         # Apply first strategy (no SMA50 & SMA200)
         if not data_without_sma.empty:
             print("Applying backtest_strategy_2 (No SMA50 & SMA200)")
             capital_df_2, number_transactions_2 = self.backtest_strategy_2(data_without_sma, capital)
-            print("Transaction after strategy 1")
-            pprint.pp(number_transactions_2)
             capital = capital_df_2["capital"].iloc[-1]  # Update capital from last value            
             total_returns += (capital / initial_capital) * 100 - 100
             returns_list.extend(capital_df_2["capital"].pct_change().dropna().tolist())
@@ -445,8 +449,6 @@ class Backtesting:
         if not data_with_sma.empty:
             print("Applying backtest_strategy (With SMA50 & SMA200)")
             capital_df_1, number_transactions_1 = self.backtest_strategy(data_with_sma, capital)
-            print("Transaction after strategy 2")
-            pprint.pp(number_transactions_1)
             capital = capital_df_1["capital"].iloc[-1]  
             total_returns += (capital / initial_capital) * 100 - 100
             returns_list.extend(capital_df_1["capital"].pct_change().dropna().tolist())
@@ -487,6 +489,7 @@ class Backtesting:
         print(f" Number of Transactions: {total_transactions}")
 
         self.plot_returns(combined_df)
+        pprint.pp(combined_df, depth=None)
 
         return combined_df  # Return full capital history
 
@@ -495,11 +498,11 @@ class Backtesting:
         print("\n--- Running Backtest (100%) ---")
         self.backtest_strategy_combined(self.data)
 
-        # print("\n--- Split data ---")
-        # self.split_data()
+        print("\n--- Split data ---")
+        self.split_data()
 
-        # print("\n--- Running In-Sample Backtest (70%) ---")
-        # self.backtest_strategy_combined(self.train_data)
+        print("\n--- Running In-Sample Backtest (70%) ---")
+        self.backtest_strategy_combined(self.train_data)
         
-        # print("\n--- Running Out-of-Sample Backtest (30%) ---")
-        # self.backtest_strategy_combined(self.test_data)
+        print("\n--- Running Out-of-Sample Backtest (30%) ---")
+        self.backtest_strategy_combined(self.test_data)
