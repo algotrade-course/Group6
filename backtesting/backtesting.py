@@ -254,10 +254,13 @@ class Backtesting:
 
         fig.show()
 
-    def plot_returns(self, capital_df):
-        if capital_df is None or capital_df.empty:
+    def plot_returns(self, capital_map):
+        if capital_map is None or not capital_map:
             print("No capital data available. Cannot plot returns.")
             return
+
+        # Convert dictionary to DataFrame
+        capital_df = pd.DataFrame(list(capital_map.items()), columns=["date", "capital"])
 
         # Convert date column to datetime format
         capital_df["date"] = pd.to_datetime(capital_df["date"])
@@ -287,6 +290,7 @@ class Backtesting:
 
         fig.show()
 
+
     # Modify backtest_strategy to store returns and call plot_returns
     def backtest_strategy(self, data_test, capital=100000, risk_per_trade=0.02):
         if data_test is None or data_test.empty:
@@ -303,68 +307,41 @@ class Backtesting:
 
         for i in range(2, len(data_test)):
             current_date = data_test["date"].iloc[i]
-            sma_diff_prev = (
-                data_test["SMA50"].iloc[i - 1] - data_test["SMA200"].iloc[i - 1]
-            )
+            
+            # Existing logic to determine SMA crossover
+            sma_diff_prev = data_test["SMA50"].iloc[i - 1] - data_test["SMA200"].iloc[i - 1]
             sma_diff_now = data_test["SMA50"].iloc[i] - data_test["SMA200"].iloc[i]
-
+            
             if sma_diff_prev < 0 and sma_diff_now > 0:
                 trend = "up"
             elif sma_diff_prev > 0 and sma_diff_now < 0:
                 trend = "down"
 
-            trade_size = capital * risk_per_trade  # Allocate % of capital per trade
+            trade_size = capital * risk_per_trade
 
             if position == 0 and trend:
-                if trend == "up" and (
-                    data_test["RSI"].iloc[i] < 15
-                    or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i]
-                ):
+                entry_price = float(data_test["close"].iloc[i])  # Ensure float conversion
+                if trend == "up" and (data_test["RSI"].iloc[i] < 15 or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i]):
                     position = 1
-                    entry_price = data_test["close"].iloc[i]
-
-                elif trend == "down" and (data_test["RSI"].iloc[i] < 15):
-                    position = 1
-                    entry_price = data_test["close"].iloc[i]
-
-                elif trend == "up" and data_test["RSI"].iloc[i] > 90:
+                elif trend == "down" and data_test["RSI"].iloc[i] > 90:
                     position = -1
-                    entry_price = data_test["close"].iloc[i]
-
-                elif trend == "down" and (
-                    data_test["RSI"].iloc[i] > 90
-                    or data_test["close"].iloc[i] >= data_test["BB_Upper"].iloc[i]
-                ):
-                    position = -1
-                    entry_price = data_test["close"].iloc[i]
 
             elif position == 1:
-                if (
-                    trend == "up"
-                    and (
-                        data_test["RSI"].iloc[i] > 85
-                        or data_test["close"].iloc[i] >= data_test["BB_Upper"].iloc[i]
-                    )
-                ) or (trend == "down" and data_test["RSI"].iloc[i] > 90):
-                    profit = float((data_test["close"].iloc[i] - entry_price) * position)
+                if (trend == "up" and (data_test["RSI"].iloc[i] > 85 or data_test["close"].iloc[i] >= data_test["BB_Upper"].iloc[i])) or \
+                (trend == "down" and data_test["RSI"].iloc[i] > 90):
+                    profit = float(float(data_test["close"].iloc[i]) - float(entry_price)) * position
                     capital += (profit / float(entry_price)) * trade_size
-                    returns.append(profit / float(entry_price))  # Convert entry_price to float
+                    returns.append(profit / float(entry_price))
                     closing_dates.append(current_date)
-                    position = 0
+                    position = 0  # Exit trade
 
             elif position == -1:
-                if (trend == "up" and data_test["RSI"].iloc[i] < 15) or (
-                    trend == "down"
-                    and (
-                        data_test["RSI"].iloc[i] < 15
-                        or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i]
-                    )
-                ):
-                    profit = float((entry_price - data_test["close"].iloc[i]) * position)
+                if (trend == "up" and data_test["RSI"].iloc[i] < 15) or (trend == "down" and (data_test["RSI"].iloc[i] < 15 or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i])):
+                    profit = float(float(data_test["close"].iloc[i]) - float(entry_price)) * position
                     capital += (float(profit) / float(entry_price)) * float(trade_size)
-                    returns.append(profit / float(entry_price))  # Convert entry_price to float
+                    returns.append(profit / float(entry_price))
                     closing_dates.append(current_date)
-                    position = 0
+                    position = 0  # Exit trade
 
             capital_map[current_date] = capital
 
@@ -381,12 +358,13 @@ class Backtesting:
         # Sharpe Ratio for 1-Minute Trading (Annualized)
         sharpe_ratio = (
             (
-                float(np.mean(returns) * (252 * 390))
-                / float(np.std(returns) * np.sqrt(252 * 390) + 1e-10)
+                float(np.mean(returns))
+                / float(np.std(returns, ddof=1))
             )
             if returns
             else 0
         )
+        
 
         print(f"Final Capital: {capital:.2f} VND")
         print(f"Total Return: {(capital / initial_capital) * 100 - 100:.2f}%")
@@ -394,6 +372,8 @@ class Backtesting:
         print(f"Max Drawdown: {max_drawdown:.2f}%")
         print(f"Sharpe Ratio: {sharpe_ratio:.2f}")
         print(f"Number of Transactions: {len(closing_dates)}")
+
+        # self.plot_returns(capital_map)
 
         return capital_map, len(closing_dates)
 
