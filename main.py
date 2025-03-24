@@ -9,13 +9,14 @@ backtest = Backtesting()
 
 # Fetch and load data
 backtest.initiate_data()
+backtest.print_data()
 
 # Apply indicators (RSI, Bollinger Bands, SMA)
-backtest.apply_indicators()
+# backtest.apply_indicators()
 
-# Run backtest strategy for 100% data
-# Run backtest strategy for 80% in-sample data and 20% out-sample data
-backtest.run_backtest_combined()
+# # Run backtest strategy for 100% data
+# # Run backtest strategy for 80% in-sample data and 20% out-sample data
+# backtest.run_backtest_combined()
 
 # Run plot chart (Still have some problem related to connection)
 # backtest.plot_chart()
