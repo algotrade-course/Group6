@@ -121,19 +121,29 @@ class Backtesting:
         self.data["date"] = pd.to_datetime(self.data["date"])
         self.data.set_index("date", inplace=True)
 
+        mc = mpf.make_marketcolors(
+            up='green', down='red',  # Up (bullish) = Green, Down (bearish) = Red
+            edge='inherit',          # Make candlestick edges match body color
+            wick='inherit',          # Make wicks match candlestick body color
+            volume='inherit'         # Optional: Match volume bars
+        )
+
+        s = mpf.make_mpf_style(marketcolors=mc, gridcolor='gray')
+
         # Convert price columns to float
         price_columns = ["open", "high", "low", "close"]
         self.data[price_columns] = self.data[price_columns].astype(float)
-        pprint.pp(self.data[:500])
+        
         # Plot candlestick chart (minute-level data)
         mpf.plot(
-            self.data[:500],
+            self.data.iloc[260000:270000],
             type="candle",
             title="VN30F1M Candlestick Chart (Minute Data)",
-            style="yahoo",
+            style=s,
             figsize=(15, 10),
             warn_too_much_data=100000,  # Increase limit if needed
-            ylim=(self.data["low"].min() - 5, self.data["high"].max() + 5) 
+            ylim=(self.data["low"].min() - 10, self.data["high"].max() + 10), 
+            datetime_format="%Y-%m-%d %H:%M"
         )
 
     def plot_chart(self):
