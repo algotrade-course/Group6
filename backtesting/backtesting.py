@@ -122,18 +122,19 @@ class Backtesting:
         self.data.set_index("date", inplace=True)
 
         mc = mpf.make_marketcolors(
-            up='green', down='red',  # Up (bullish) = Green, Down (bearish) = Red
-            edge='inherit',          # Make candlestick edges match body color
-            wick='inherit',          # Make wicks match candlestick body color
-            volume='inherit'         # Optional: Match volume bars
+            up="green",
+            down="red",  # Up (bullish) = Green, Down (bearish) = Red
+            edge="inherit",  # Make candlestick edges match body color
+            wick="inherit",  # Make wicks match candlestick body color
+            volume="inherit",  # Optional: Match volume bars
         )
 
-        s = mpf.make_mpf_style(marketcolors=mc, gridcolor='gray')
+        s = mpf.make_mpf_style(marketcolors=mc, gridcolor="gray")
 
         # Convert price columns to float
         price_columns = ["open", "high", "low", "close"]
         self.data[price_columns] = self.data[price_columns].astype(float)
-        
+
         # Plot candlestick chart (minute-level data)
         mpf.plot(
             self.data.iloc[260000:270000],
@@ -142,8 +143,8 @@ class Backtesting:
             style=s,
             figsize=(15, 10),
             warn_too_much_data=100000,  # Increase limit if needed
-            ylim=(self.data["low"].min() - 10, self.data["high"].max() + 10), 
-            datetime_format="%Y-%m-%d %H:%M"
+            ylim=(self.data["low"].min() - 10, self.data["high"].max() + 10),
+            datetime_format="%Y-%m-%d %H:%M",
         )
 
     def plot_chart(self):
@@ -287,7 +288,7 @@ class Backtesting:
         fig.show()
 
     # Modify backtest_strategy to store returns and call plot_returns
-    def backtest_strategy(self, data_test, capital=100000):
+    def backtest_strategy(self, data_test, capital=100000, risk_per_trade=0.02):
         if data_test is None or data_test.empty:
             print("No data available for backtesting.")
             return
@@ -295,14 +296,13 @@ class Backtesting:
         position = 0
         entry_price = 0
         returns = []
-        closing_dates = []  # Track closing position dates
+        closing_dates = []
         trend = None
         initial_capital = capital
-        capital_map = {}  # Dictionary to record capital at every date
-        capital_map[data_test["date"].iloc[0]] = capital
+        capital_map = {data_test["date"].iloc[0]: capital}
 
         for i in range(2, len(data_test)):
-            current_date = data_test["date"].iloc[i]  # Get current date
+            current_date = data_test["date"].iloc[i]
             sma_diff_prev = (
                 data_test["SMA50"].iloc[i - 1] - data_test["SMA200"].iloc[i - 1]
             )
@@ -313,38 +313,32 @@ class Backtesting:
             elif sma_diff_prev > 0 and sma_diff_now < 0:
                 trend = "down"
 
+            trade_size = capital * risk_per_trade  # Allocate % of capital per trade
+
             if position == 0 and trend:
-                # Open long
                 if trend == "up" and (
                     data_test["RSI"].iloc[i] < 15
                     or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i]
                 ):
                     position = 1
                     entry_price = data_test["close"].iloc[i]
-                    # print(current_date, entry_price, "\nLong 1\n")
-                    # print current date
+
                 elif trend == "down" and (data_test["RSI"].iloc[i] < 15):
                     position = 1
                     entry_price = data_test["close"].iloc[i]
-                    # print(current_date, entry_price, "\nLong 2\n")
-                    # print current date
-                # Open short
+
                 elif trend == "up" and data_test["RSI"].iloc[i] > 90:
                     position = -1
                     entry_price = data_test["close"].iloc[i]
-                    # print(current_date, entry_price, "\nShort 1\n")
-                    # print current date
+
                 elif trend == "down" and (
                     data_test["RSI"].iloc[i] > 90
                     or data_test["close"].iloc[i] >= data_test["BB_Upper"].iloc[i]
                 ):
                     position = -1
                     entry_price = data_test["close"].iloc[i]
-                    # print(current_date, entry_price, "\nShort 2\n")
-                    # print current date
 
             elif position == 1:
-                # Close long
                 if (
                     trend == "up"
                     and (
@@ -352,16 +346,13 @@ class Backtesting:
                         or data_test["close"].iloc[i] >= data_test["BB_Upper"].iloc[i]
                     )
                 ) or (trend == "down" and data_test["RSI"].iloc[i] > 90):
-                    profit = float(
-                        (data_test["close"].iloc[i] - entry_price) / entry_price * 100
-                    )
-                    capital += capital * (profit / 100.0)
-                    returns.append(profit)
-                    closing_dates.append(current_date)  # Save closing date
+                    profit = float((data_test["close"].iloc[i] - entry_price) * position)
+                    capital += (profit / float(entry_price)) * trade_size
+                    returns.append(profit / float(entry_price))  # Convert entry_price to float
+                    closing_dates.append(current_date)
                     position = 0
 
             elif position == -1:
-                # Close short
                 if (trend == "up" and data_test["RSI"].iloc[i] < 15) or (
                     trend == "down"
                     and (
@@ -369,156 +360,42 @@ class Backtesting:
                         or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i]
                     )
                 ):
-                    profit = float(
-                        (entry_price - data_test["close"].iloc[i]) / entry_price * 100
-                    )
-                    capital += capital * (profit / 100.0)
-                    returns.append(profit)
-                    closing_dates.append(current_date)  # Save closing date
-                    position = 0
-
-            # Record capital at each date
-            capital_map[current_date] = capital
-
-        # Fill missing dates in capital_map
-
-        full_date_range = pd.date_range(
-            start=data_test["date"].min(), end=data_test["date"].max(), freq="D"
-        )
-        capital_series = pd.Series(
-            capital_map, index=full_date_range
-        ).ffill()  # Forward-fill missing dates
-
-        # Convert to DataFrame
-        capital_df = capital_series.reset_index()
-        capital_df.columns = ["date", "capital"]
-
-        total_returns = (capital / initial_capital) * 100 - 100
-        print(f" Final Capital: {capital:.2f} VND")
-        print(f" Total Return: {total_returns:.2f}%")
-        print(
-            f" Win Rate: {len([x for x in returns if x > 0]) / len(returns) * 100:.2f}%"
-            if returns
-            else "Win Rate: 0%"
-        )
-        print(f" Max Drawdown: {min(returns):.2f}%" if returns else "Max Drawdown: 0%")
-        print(
-            f" Sharpe Ratio: {np.mean(returns) / (np.std(returns) + 1e-10):.2f}"
-            if returns
-            else "Sharpe Ratio: 0"
-        )
-        print(f" Number of Transactions: {len(closing_dates)}")
-
-        # Plot returns with actual closing dates
-        self.plot_returns(capital_df)
-
-        return capital_df, len(
-            closing_dates
-        )  # Return DataFrame with filled missing dates
-
-    # No MA200 and MA50 crossing
-    def backtest_strategy_2(self, data_test, capital=100000):
-        if data_test is None or data_test.empty:
-            print("No data available for backtesting.")
-            return
-
-        # Fix NaN & Type Issues
-        data_test["RSI"] = pd.to_numeric(data_test["RSI"], errors="coerce")
-        data_test["BB_Lower"] = pd.to_numeric(data_test["BB_Lower"], errors="coerce")
-        data_test["BB_Upper"] = pd.to_numeric(data_test["BB_Upper"], errors="coerce")
-        data_test["close"] = pd.to_numeric(data_test["close"], errors="coerce")
-
-        position = 0
-        entry_price = 0
-        returns = []
-        closing_dates = []
-        initial_capital = capital
-        capital_map = {}  # Dictionary to track capital over time
-        capital_map[data_test["date"].iloc[0]] = capital
-
-        for i in range(1, len(data_test)):
-            current_date = data_test["date"].iloc[i]  # Get the current date
-
-            if position == 0:
-                if (
-                    data_test["RSI"].iloc[i] < 25
-                    or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i]
-                ):
-                    position = 1  # Open Long
-                    entry_price = data_test["close"].iloc[i]
-
-                elif (
-                    data_test["RSI"].iloc[i] > 75
-                    or data_test["close"].iloc[i] >= data_test["BB_Upper"].iloc[i]
-                ):
-                    position = -1  # Open Short
-                    entry_price = data_test["close"].iloc[i]
-
-            elif position == 1:  # Close Long
-                if (
-                    data_test["RSI"].iloc[i] > 75
-                    or data_test["close"].iloc[i] >= data_test["BB_Upper"].iloc[i]
-                ):
-                    profit = (
-                        (data_test["close"].iloc[i] - entry_price) / entry_price * 100
-                    )
-                    capital += capital * (profit / 100)
-                    returns.append(profit)
+                    profit = float((entry_price - data_test["close"].iloc[i]) * position)
+                    capital += (float(profit) / float(entry_price)) * float(trade_size)
+                    returns.append(profit / float(entry_price))  # Convert entry_price to float
                     closing_dates.append(current_date)
                     position = 0
 
-            elif position == -1:  # Close Short
-                if (
-                    data_test["RSI"].iloc[i] < 25
-                    or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i]
-                ):
-                    profit = (
-                        (entry_price - data_test["close"].iloc[i]) / entry_price * 100
-                    )
-                    capital += capital * (profit / 100)
-                    returns.append(profit)
-                    closing_dates.append(current_date)
-                    position = 0
-
-            # Record capital for this date
             capital_map[current_date] = capital
 
-        # Fill missing dates with previous capital value
-        full_date_range = pd.date_range(
-            start=data_test["date"].min(), end=data_test["date"].max(), freq="D"
-        )
-        capital_series = pd.Series(
-            capital_map, index=full_date_range
-        ).ffill()  # Forward-fill missing values
+        # Max Drawdown (Peak-to-Trough Drop)
+        max_capital = max(capital_map.values())
+        min_capital = min(capital_map.values())
+        max_drawdown = (max_capital - min_capital) / max_capital * 100
 
-        # Convert to DataFrame
-        capital_df = capital_series.reset_index()
-        capital_df.columns = ["date", "capital"]
-
-        # Performance Metrics
-        total_returns = (capital / initial_capital) * 100 - 100
+        # Win Rate
         win_rate = (
-            len([x for x in returns if x > 0]) / len(returns) * 100 if returns else 0
+            (len([x for x in returns if x > 0]) / len(returns) * 100) if returns else 0
         )
-        max_drawdown = min(returns) if returns else 0
+
+        # Sharpe Ratio for 1-Minute Trading (Annualized)
         sharpe_ratio = (
-            float(np.mean(returns)) / (float(np.std(returns)) + 1e-10) if returns else 0
+            (
+                float(np.mean(returns) * (252 * 390))
+                / float(np.std(returns) * np.sqrt(252 * 390) + 1e-10)
+            )
+            if returns
+            else 0
         )
 
-        # Print Results
-        # print(f" Final Capital: {capital:.2f} VND")
-        # print(f" Total Return: {total_returns:.2f}%")
-        # print(f" Win Rate: {win_rate:.2f}%")
-        # print(f" Max Drawdown: {max_drawdown:.2f}%")
-        # print(f" Sharpe Ratio: {sharpe_ratio:.2f}")
-        # print(f" Number of Transactions: {len(closing_dates)}")
+        print(f"Final Capital: {capital:.2f} VND")
+        print(f"Total Return: {(capital / initial_capital) * 100 - 100:.2f}%")
+        print(f"Win Rate: {win_rate:.2f}%")
+        print(f"Max Drawdown: {max_drawdown:.2f}%")
+        print(f"Sharpe Ratio: {sharpe_ratio:.2f}")
+        print(f"Number of Transactions: {len(closing_dates)}")
 
-        # Plot capital over time
-        # self.plot_returns(capital_df)
-
-        return capital_df, len(
-            closing_dates
-        )  # Return DataFrame with complete capital history
+        return capital_map, len(closing_dates)
 
     # Split the test case into in-sample (70%) and out-sample (30%)
     def run_backtest(self):
@@ -533,122 +410,3 @@ class Backtesting:
 
         print("\n--- Running Out-of-Sample Backtest (30%) ---")
         self.backtest_strategy(self.test_data)
-
-    def run_backtest_2(self):
-        print("\n--- Running Backtest (100%) ---")
-        self.backtest_strategy_2(self.data)
-
-        print("\n--- Split data ---")
-        self.split_data()
-
-        print("\n--- Running In-Sample Backtest (70%) ---")
-        self.backtest_strategy_2(self.train_data)
-
-        print("\n--- Running Out-of-Sample Backtest (30%) ---")
-        self.backtest_strategy_2(self.test_data)
-
-    def backtest_strategy_combined(self, data_test, capital=100000):
-        if data_test is None or data_test.empty:
-            print("No data available for backtesting.")
-            return None
-
-        # Ensure 'date' is in datetime format
-        data_test["date"] = pd.to_datetime(data_test["date"])
-
-        # Split data into two parts:
-        data_without_sma = data_test[data_test[["SMA50", "SMA200"]].isna().any(axis=1)]
-        data_with_sma = data_test.drop(data_without_sma.index)
-
-        # Ensure sorted order by date
-        data_without_sma = data_without_sma.sort_values(by="date")
-        data_with_sma = data_with_sma.sort_values(by="date")
-
-        # Initialize capital tracking
-        initial_capital = capital
-
-        # Storage for metrics
-        total_returns = 0
-        total_transactions = 0
-        returns_list = []
-        number_transactions_1 = 0
-        number_transactions_2 = 0
-
-        # Apply first strategy (no SMA50 & SMA200)
-        if not data_without_sma.empty:
-            print("Applying backtest_strategy_2 (No SMA50 & SMA200)")
-            capital_df_2, number_transactions_2 = self.backtest_strategy_2(
-                data_without_sma, capital
-            )
-            capital = capital_df_2["capital"].iloc[-1]  # Update capital from last value
-            total_returns += (capital / initial_capital) * 100 - 100
-            returns_list.extend(capital_df_2["capital"].pct_change().dropna().tolist())
-        else:
-            capital_df_2 = pd.DataFrame(columns=["date", "capital"])
-
-        # Apply second strategy (with SMA50 & SMA200)
-        if not data_with_sma.empty:
-            print("Applying backtest_strategy (With SMA50 & SMA200)")
-            capital_df_1, number_transactions_1 = self.backtest_strategy(
-                data_with_sma, capital
-            )
-            capital = capital_df_1["capital"].iloc[-1]
-            total_returns += (capital / initial_capital) * 100 - 100
-            returns_list.extend(capital_df_1["capital"].pct_change().dropna().tolist())
-        else:
-            capital_df_1 = pd.DataFrame(columns=["date", "capital"])
-
-        # Combine results and sort by date
-        combined_df = (
-            pd.concat([capital_df_2, capital_df_1])
-            .sort_values(by="date")
-            .reset_index(drop=True)
-        )
-
-        # Compute final performance metrics
-        total_transactions = number_transactions_1 + number_transactions_2
-
-        # Fix Win Rate
-        if returns_list:
-            win_rate = (sum(x > 0 for x in returns_list) / total_transactions) * 100
-        else:
-            win_rate = 0
-
-        # Fix Sharpe Ratio
-        if returns_list:
-            mean_return = np.mean(returns_list)
-            std_return = np.std(returns_list) + 1e-10  # Avoid division by zero
-            sharpe_ratio = (mean_return * np.sqrt(total_transactions)) / std_return
-        else:
-            sharpe_ratio = 0
-
-        # Calculate Max Drawdown
-        combined_df["peak"] = combined_df["capital"].cummax()
-        combined_df["drawdown"] = (
-            combined_df["peak"] - combined_df["capital"]
-        ) / combined_df["peak"]
-        max_drawdown = combined_df["drawdown"].max() * -100  # Convert to percentage
-
-        # Print final statistics
-        print(f" Final Capital: {capital:.2f} VND")
-        print(f" Total Return: {total_returns:.2f}%")
-        print(f" Win Rate: {win_rate:.2f}%")
-        print(f" Max Drawdown: {max_drawdown:.2f}%")
-        print(f" Sharpe Ratio: {sharpe_ratio:.2f}")
-        print(f" Number of Transactions: {total_transactions}")
-
-        self.plot_returns(combined_df)
-
-        return combined_df  # Return full capital history
-
-    def run_backtest_combined(self):
-        print("\n--- Running Backtest (100%) ---")
-        self.backtest_strategy_combined(self.data)
-
-        print("\n--- Split data ---")
-        self.split_data()
-
-        print("\n--- Running In-Sample Backtest (70%) ---")
-        self.backtest_strategy_combined(self.train_data)
-
-        print("\n--- Running Out-of-Sample Backtest (30%) ---")
-        self.backtest_strategy_combined(self.test_data)
