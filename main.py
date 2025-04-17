@@ -5,7 +5,11 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.subplots as sp
 
-backtest = Backtesting()
+period_rsi = 7 
+period_bb = 50
+in_sample_size = 0.7 # Percentage of data that used for the in sample test 
+risk_per_trade = 0.2 # Percentage of total capital that used for each trade 
+backtest = Backtesting(period_rsi, period_bb, in_sample_size, risk_per_trade)
 
 # Fetch and load data
 backtest.initiate_data()

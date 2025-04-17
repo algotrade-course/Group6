@@ -11,12 +11,18 @@ from data.service import *
 class Backtesting:
     def __init__(
         self,
+        period_rsi,
+        period_bb,
+        in_sample_size,
+        risk_per_trade,
         data=None,
-        period=14,
         daily_data=None,
     ):
         self.daily_data = daily_data
-        self.period = period
+        self.period_rsi = period_rsi
+        self.period_bb = period_bb
+        self.in_sample_size = in_sample_size
+        self.risk_per_trade = risk_per_trade
         self.data = data
 
     def initiate_data(self):
@@ -29,9 +35,11 @@ class Backtesting:
             raise TypeError("Data is not initiated")
         pprint.pp(self.data[:100])
 
-    def calculate_rsi(self, data=None, period=7):
+    def calculate_rsi(self, data=None, period=None):
         if data is None:
             data = self.data
+        if period is None:
+            period = self.period_rsi
 
         # Check if data is valid
         if data is None or data.empty:
@@ -65,11 +73,13 @@ class Backtesting:
 
         return data  # Return RSI as a Series
 
-    def calculate_bollinger_bands(self, data=None, period=50, std_dev=2):
+    def calculate_bollinger_bands(self, data=None, period=None, std_dev=2):
         if data is None:
             data = self.data
         if data.empty:
             return data
+        if period is None:
+            period = self.period_rsi
 
         data["BB_Middle"] = data["close"].rolling(window=period).mean()
         data["BB_Upper"] = data["BB_Middle"] + (
@@ -100,9 +110,11 @@ class Backtesting:
         # pprint.pp(self.data[:20])
         return self.data
 
-    def split_data(self, train_size=0.7):
+    def split_data(self, train_size=None):
         if self.data is None or self.data.empty:
             raise ValueError("No data available to split.")
+        if train_size is None:
+            train_size = self.in_sample_size
 
         split_index = int(len(self.data) * train_size)
         self.train_data = self.data.iloc[:split_index].copy()
@@ -292,10 +304,12 @@ class Backtesting:
 
 
     # Modify backtest_strategy to store returns and call plot_returns
-    def backtest_strategy(self, data_test, capital=100000, risk_per_trade=0.02):
+    def backtest_strategy(self, data_test, capital=100000, risk_per_trade=None):
         if data_test is None or data_test.empty:
             print("No data available for backtesting.")
             return
+        if risk_per_trade is None:
+            risk_per_trade = self.risk_per_trade
 
         position = 0
         entry_price = 0
@@ -373,11 +387,10 @@ class Backtesting:
         print(f"Sharpe Ratio: {sharpe_ratio:.2f}")
         print(f"Number of Transactions: {len(closing_dates)}")
 
-        # self.plot_returns(capital_map)
+        self.plot_returns(capital_map)
 
         return capital_map, len(closing_dates)
 
-    # Split the test case into in-sample (70%) and out-sample (30%)
     def run_backtest(self):
         # print("\n--- Running Backtest (100%) ---")
         # self.backtest_strategy(self.data)
@@ -385,8 +398,8 @@ class Backtesting:
         print("\n--- Split data ---")
         self.split_data()
 
-        print("\n--- Running In-Sample Backtest (70%) ---")
+        print("\n--- Running In-Sample Backtest ---")
         self.backtest_strategy(self.train_data)
 
-        print("\n--- Running Out-of-Sample Backtest (30%) ---")
+        print("\n--- Running Out-of-Sample Backtest ---")
         self.backtest_strategy(self.test_data)

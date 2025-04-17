@@ -37,10 +37,10 @@ class DataFetcher:
 
     def save_to_csv(self, file_path='output.csv'):
         if self.df is not None:
-            self.df.to_csv(file_path, index=True)  # Giữ cột 'date' làm index
-            print(f"Dữ liệu đã được lưu vào {file_path}")
+            self.df.to_csv(file_path, index=True)  
+            print(f"Data is already stored in {file_path}")
         else:
-            print("Không có dữ liệu để lưu!")
+            print("There is no data to store")
 
 
 

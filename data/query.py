@@ -75,6 +75,7 @@ JOIN date_ranges dr
 ORDER BY tb_max.datetime ASC, tb_max.tickersymbol ASC;
 """
 
+# Data for each mins
 matched_data_query="""
 WITH date_ranges AS (
     SELECT 'VN30F2101' AS tickersymbol, '2021-01-04'::DATE AS start_date, '2021-01-14'::DATE AS end_date UNION ALL
