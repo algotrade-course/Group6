@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 import plotly.subplots as sp
 from data.service import *
-
+from evaluator import *
 
 class Backtesting:
     def __init__(
@@ -36,107 +36,15 @@ class Backtesting:
             raise TypeError("Data is not initiated")
         pprint.pp(self.data[:100])
 
-    def calculate_rsi(self, data=None, period=None):
-        if data is None:
-            data = self.data
-        if period is None:
-            period = self.period_rsi
-
-        # Check if data is valid
-        if data is None or data.empty:
-            raise ValueError("Data is empty. Cannot calculate RSI.")
-
-        # Ensure 'close' column exists
-        if "close" not in data.columns:
-            raise KeyError(
-                f"Column 'close' not found in DataFrame. Available columns: {list(data.columns)}"
-            )
-
-        delta = data["close"].diff(1)
-
-        gain = np.where(delta > 0, delta, 0)
-        loss = np.where(delta < 0, -delta, 0)
-
-        avg_gain = (
-            pd.Series(gain, index=data.index)
-            .rolling(window=period, min_periods=1)
-            .mean()
-        )
-        avg_loss = (
-            pd.Series(loss, index=data.index)
-            .rolling(window=period, min_periods=1)
-            .mean()
-        )
-
-        rs = avg_gain / (avg_loss + 1e-10)
-        rsi = 100 - (100 / (1 + rs))
-        data["RSI"] = rsi
-
-        return data  # Return RSI as a Series
-
-    def calculate_bollinger_bands(self, data=None, period=None, std_dev=2):
-        if data is None:
-            data = self.data
-        if data.empty:
-            return data
-        if period is None:
-            period = self.period_rsi
-
-        data["BB_Middle"] = data["close"].rolling(window=period).mean()
-        data["BB_Upper"] = data["BB_Middle"] + (
-            std_dev * data["close"].rolling(window=period).std()
-        )
-        data["BB_Lower"] = data["BB_Middle"] - (
-            std_dev * data["close"].rolling(window=period).std()
-        )
-        return data
-
-    def calculate_sma(self, period, data=None):
-        if data is None:
-            data = self.data
-        if data.empty:
-            return data
-
-        column_name = f"SMA{period}"
-        data[column_name] = data["close"].rolling(window=period).mean()
-        return data
-
     def apply_indicators(self):
-        self.data = self.calculate_rsi()
-        self.data = self.calculate_bollinger_bands()
-        self.data = self.calculate_sma(50)
-        self.data = self.calculate_sma(200)
+        self.data = calculate_rsi(self.data, self.period_rsi)
+        self.data = calculate_bollinger_bands(self.data, self.period_rsi, 2)
+        self.data = calculate_sma(self.data, 50)
+        self.data = calculate_sma(self.data, 200)
         self.data.reset_index(inplace=True)
         self.data["index"] = self.data.index
         
         return self.data
-
-    def calculate_sharpe_ratio(self, returns):
-        if not returns:
-            return 0.0
-
-        mean_return = np.mean(returns)
-        std_return = np.std(returns, ddof=1)
-
-        if std_return == 0:
-            return 0.0
-
-        return mean_return / std_return
-    
-    def calculate_max_drawdown(self, capital_map):
-        if not capital_map:
-            return 0.0
-        
-        peak = float('-inf')
-        max_drawdown = 0.0
-
-        for capital in capital_map.values():
-            if capital > peak:
-                peak = capital
-            drawdown = (peak - capital) / peak * 100
-            max_drawdown = max(max_drawdown, drawdown)
-
-        return max_drawdown
 
     def split_data_sample(self, start_date="2021-01-15", end_date="2021-12-31"):
         if self.data is None or self.data.empty:
@@ -487,12 +395,12 @@ class Backtesting:
             capital_map[current_date] = capital
 
         # Max Drawdown (Peak-to-Trough Drop)
-        max_drawdown = self.calculate_max_drawdown(capital_map)
+        max_drawdown = calculate_max_drawdown(capital_map)
         # Win Rate
         win_rate = (
             (len([x for x in returns if x > 0]) / len(returns) * 100) if returns else 0
         )
-        sharpe_ratio = self.calculate_sharpe_ratio(returns)
+        sharpe_ratio = calculate_sharpe_ratio(returns)
         
 
         print(f"Final Capital: {capital:.2f} points")
