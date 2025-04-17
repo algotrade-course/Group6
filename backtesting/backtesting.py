@@ -28,6 +28,7 @@ class Backtesting:
     def initiate_data(self):
         self.daily_data = DataFetcher()
         self.data = self.daily_data.fetch_data()
+        self.daily_data.print_dataset()
         self.daily_data.save_to_csv("daily_data.csv")
 
     def print_data(self):
@@ -107,8 +108,55 @@ class Backtesting:
         self.data = self.calculate_sma(200)
         self.data.reset_index(inplace=True)
         self.data["index"] = self.data.index
-        # pprint.pp(self.data[:20])
+        
         return self.data
+
+    def calculate_sharpe_ratio(self, returns):
+        if not returns:
+            return 0.0
+
+        mean_return = np.mean(returns)
+        std_return = np.std(returns, ddof=1)
+
+        if std_return == 0:
+            return 0.0
+
+        return mean_return / std_return
+    
+    def calculate_max_drawdown(self, capital_map):
+        if not capital_map:
+            return 0.0
+        
+        peak = float('-inf')
+        max_drawdown = 0.0
+
+        for capital in capital_map.values():
+            if capital > peak:
+                peak = capital
+            drawdown = (peak - capital) / peak * 100
+            max_drawdown = max(max_drawdown, drawdown)
+
+        return max_drawdown
+
+    def split_data_sample(self, start_date="2021-01-15", end_date="2021-12-31"):
+        if self.data is None or self.data.empty:
+            raise ValueError("No data available to split.")
+
+        # Ensure 'date' is in datetime format
+        self.data["date"] = pd.to_datetime(self.data["date"])
+
+        # Create train and test sets based on date range
+        self.train_data = self.data[
+            (self.data["date"] >= pd.to_datetime(start_date)) &
+            (self.data["date"] <= pd.to_datetime(end_date))
+        ].copy()
+
+        self.test_data = self.data[self.data["date"] > pd.to_datetime(end_date)].copy()
+
+        print(
+            f"Data split: {len(self.train_data)} (train from {start_date} to {end_date}), "
+            f"{len(self.test_data)} (test after {end_date})"
+        )
 
     def split_data(self, train_size=None):
         if self.data is None or self.data.empty:
@@ -302,15 +350,92 @@ class Backtesting:
 
         fig.show()
 
+    def extract_trades(self, data_test, capital=1000, risk_per_trade=None):
+        if data_test is None or data_test.empty:
+            print("No data available to extract trades.")
+            return []
+        
+        if risk_per_trade is None:
+            risk_per_trade = self.risk_per_trade
+
+        position = 0
+        entry_price = 0
+        trades = []
+        trend = None
+        capital_map = {data_test["date"].iloc[0]: capital}
+
+        for i in range(2, len(data_test)):
+            current_date = data_test["date"].iloc[i]
+
+            sma_diff_prev = data_test["SMA50"].iloc[i - 1] - data_test["SMA200"].iloc[i - 1]
+            sma_diff_now = data_test["SMA50"].iloc[i] - data_test["SMA200"].iloc[i]
+
+            if sma_diff_prev < 0 and sma_diff_now > 0:
+                trend = "up"
+            elif sma_diff_prev > 0 and sma_diff_now < 0:
+                trend = "down"
+
+            trade_size = capital * risk_per_trade
+
+            if position == 0 and trend:
+                entry_price = float(data_test["close"].iloc[i])
+                if trend == "up" and (data_test["RSI"].iloc[i] < 15 or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i]):
+                    position = 1
+                    date_open = current_date
+                    capital_open = capital
+                elif trend == "down" and data_test["RSI"].iloc[i] > 90:
+                    position = -1
+                    date_open = current_date
+                    capital_open = capital
+
+            elif position == 1:
+                if (trend == "up" and (data_test["RSI"].iloc[i] > 85 or data_test["close"].iloc[i] >= data_test["BB_Upper"].iloc[i])) or \
+                (trend == "down" and data_test["RSI"].iloc[i] > 90):
+                    exit_price = float(data_test["close"].iloc[i])
+                    profit = (exit_price - entry_price) - 0.47  # Apply fee after trade
+                    capital += (profit / entry_price) * trade_size
+
+                    trades.append({
+                        'type': 'LONG',
+                        'capital_open': capital_open,
+                        'capital_close': capital,
+                        'date_open': date_open,
+                        'date_close': current_date
+                    })
+
+                    position = 0
+
+            elif position == -1:
+                if (trend == "up" and data_test["RSI"].iloc[i] < 15) or \
+                (trend == "down" and (data_test["RSI"].iloc[i] < 15 or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i])):
+                    exit_price = float(data_test["close"].iloc[i])
+                    profit = ((exit_price - entry_price) * position) - 0.47  # Apply fee after trade
+                    capital += (profit / entry_price) * trade_size
+
+                    trades.append({
+                        'type': 'SHORT',
+                        'capital_open': capital_open,
+                        'capital_close': capital,
+                        'date_open': date_open,
+                        'date_close': current_date
+                    })
+
+                    position = 0
+
+            capital_map[current_date] = capital
+
+        return trades
+
 
     # Modify backtest_strategy to store returns and call plot_returns
-    def backtest_strategy(self, data_test, capital=100000, risk_per_trade=None):
+    def backtest_strategy(self, data_test, capital=1000, risk_per_trade=None):
         if data_test is None or data_test.empty:
             print("No data available for backtesting.")
             return
         if risk_per_trade is None:
             risk_per_trade = self.risk_per_trade
 
+        fee = 0.47
         position = 0
         entry_price = 0
         returns = []
@@ -343,16 +468,18 @@ class Backtesting:
             elif position == 1:
                 if (trend == "up" and (data_test["RSI"].iloc[i] > 85 or data_test["close"].iloc[i] >= data_test["BB_Upper"].iloc[i])) or \
                 (trend == "down" and data_test["RSI"].iloc[i] > 90):
-                    profit = float(float(data_test["close"].iloc[i]) - float(entry_price)) * position
+                    profit = (float(data_test["close"].iloc[i]) - float(entry_price)) - fee
                     capital += (profit / float(entry_price)) * trade_size
                     returns.append(profit / float(entry_price))
                     closing_dates.append(current_date)
                     position = 0  # Exit trade
 
+
             elif position == -1:
-                if (trend == "up" and data_test["RSI"].iloc[i] < 15) or (trend == "down" and (data_test["RSI"].iloc[i] < 15 or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i])):
-                    profit = float(float(data_test["close"].iloc[i]) - float(entry_price)) * position
-                    capital += (float(profit) / float(entry_price)) * float(trade_size)
+                if (trend == "up" and data_test["RSI"].iloc[i] < 15) or \
+                (trend == "down" and (data_test["RSI"].iloc[i] < 15 or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i])):
+                    profit = ((float(data_test["close"].iloc[i]) - float(entry_price)) * position) - fee
+                    capital += (profit / float(entry_price)) * trade_size
                     returns.append(profit / float(entry_price))
                     closing_dates.append(current_date)
                     position = 0  # Exit trade
@@ -360,31 +487,19 @@ class Backtesting:
             capital_map[current_date] = capital
 
         # Max Drawdown (Peak-to-Trough Drop)
-        max_capital = max(capital_map.values())
-        min_capital = min(capital_map.values())
-        max_drawdown = (max_capital - min_capital) / max_capital * 100
-
+        max_drawdown = self.calculate_max_drawdown(capital_map)
         # Win Rate
         win_rate = (
             (len([x for x in returns if x > 0]) / len(returns) * 100) if returns else 0
         )
-
-        # Sharpe Ratio for 1-Minute Trading (Annualized)
-        sharpe_ratio = (
-            (
-                float(np.mean(returns))
-                / float(np.std(returns, ddof=1))
-            )
-            if returns
-            else 0
-        )
+        sharpe_ratio = self.calculate_sharpe_ratio(returns)
         
 
-        print(f"Final Capital: {capital:.2f} VND")
+        print(f"Final Capital: {capital:.2f} points")
         print(f"Total Return: {(capital / initial_capital) * 100 - 100:.2f}%")
         print(f"Win Rate: {win_rate:.2f}%")
-        print(f"Max Drawdown: {max_drawdown:.2f}%")
-        print(f"Sharpe Ratio: {sharpe_ratio:.2f}")
+        print(f"Max Drawdown: {max_drawdown:.6f}%")
+        print(f"Sharpe Ratio: {sharpe_ratio:.6f}")
         print(f"Number of Transactions: {len(closing_dates)}")
 
         self.plot_returns(capital_map)
@@ -396,10 +511,11 @@ class Backtesting:
         # self.backtest_strategy(self.data)
 
         print("\n--- Split data ---")
-        self.split_data()
-
-        print("\n--- Running In-Sample Backtest ---")
+        self.split_data_sample()
         self.backtest_strategy(self.train_data)
 
-        print("\n--- Running Out-of-Sample Backtest ---")
-        self.backtest_strategy(self.test_data)
+        trades = self.extract_trades(self.train_data)
+        trades_df = pd.DataFrame(trades)
+        print(trades_df)
+
+

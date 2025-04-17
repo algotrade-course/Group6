@@ -28,12 +28,8 @@ class DataFetcher:
         self.process_data()
         return self.df
 
-    # Modify the data
     def process_data(self):
-        # Sort the database according to date
         self.df.set_index('date', inplace=True) 
-        # Rename quantity to volume
-        self.df.rename(columns={'quantity': 'volume'}, inplace=True)
 
     def save_to_csv(self, file_path='output.csv'):
         if self.df is not None:
@@ -42,6 +38,15 @@ class DataFetcher:
         else:
             print("There is no data to store")
 
+    def print_dataset(self, num_rows=100):
+        if self.df is not None:
+            print(self.df.head(num_rows))
+        else:
+            print("No data available to display.")
+
+
+
+    
 
 
 
