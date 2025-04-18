@@ -342,7 +342,7 @@ class Backtesting:
 
 
     # Modify backtest_strategy to store returns and call plot_returns
-    def backtest_strategy(self, data_test, capital=1000, risk_per_trade=None):
+    def backtest_strategy(self, data_test, capital=1000000000, risk_per_trade=None):
         if data_test is None or data_test.empty:
             print("No data available for backtesting.")
             return
