@@ -120,7 +120,7 @@ class Backtesting:
 
         # Plot candlestick chart (minute-level data)
         mpf.plot(
-            self.data.iloc[260000:270000],
+            self.data.iloc[211029:228328],
             type="candle",
             title="VN30F1M Candlestick Chart (Minute Data)",
             style=s,
@@ -439,7 +439,9 @@ class Backtesting:
 
         trades = self.extract_trades(self.data)
         trades_df = pd.DataFrame(trades)
-        print(trades_df[:200])
+        trades_df.to_csv("trades_output.csv", index=False)
+        print("Trades saved to trades_output.csv")
+        # print(trades_df[:200])
         # self.split_data(0.8)
 
 
