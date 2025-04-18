@@ -435,7 +435,7 @@ class Backtesting:
 
         # print("\n--- Split data ---")
         # self.split_data_sample()
-        # self.backtest_strategy(self.data)
+        self.backtest_strategy(self.data)
 
         trades = self.extract_trades(self.data)
         trades_df = pd.DataFrame(trades)
