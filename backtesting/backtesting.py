@@ -15,6 +15,9 @@ class Backtesting:
         period_bb,
         in_sample_size,
         risk_per_trade,
+        rsi_oversold,
+        rsi_overbought,
+        rsi_extreme_overbought,
         data=None,
         daily_data=None,
     ):
@@ -23,6 +26,9 @@ class Backtesting:
         self.period_bb = period_bb
         self.in_sample_size = in_sample_size
         self.risk_per_trade = risk_per_trade
+        self.rsi_oversold = rsi_oversold
+        self.rsi_overbought = rsi_overbought
+        self.rsi_extreme_overbought = rsi_extreme_overbought
         self.data = data
 
     def initiate_data(self):
@@ -287,18 +293,18 @@ class Backtesting:
 
             if position == 0 and trend:
                 entry_price = float(data_test["close"].iloc[i])
-                if trend == "up" and (data_test["RSI"].iloc[i] < 15 or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i]):
+                if trend == "up" and (data_test["RSI"].iloc[i] < self.rsi_oversold or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i]):
                     position = 1
                     date_open = current_date
                     capital_open = capital
-                elif trend == "down" and data_test["RSI"].iloc[i] > 90:
+                elif trend == "down" and data_test["RSI"].iloc[i] > self.rsi_extreme_overbought:
                     position = -1
                     date_open = current_date
                     capital_open = capital
 
             elif position == 1:
-                if (trend == "up" and (data_test["RSI"].iloc[i] > 85 or data_test["close"].iloc[i] >= data_test["BB_Upper"].iloc[i])) or \
-                (trend == "down" and data_test["RSI"].iloc[i] > 90):
+                if (trend == "up" and (data_test["RSI"].iloc[i] > self.rsi_overbought or data_test["close"].iloc[i] >= data_test["BB_Upper"].iloc[i])) or \
+                (trend == "down" and data_test["RSI"].iloc[i] > self.rsi_extreme_overbought):
                     exit_price = float(data_test["close"].iloc[i])
                     profit = (exit_price - entry_price) - 0.47  # Apply fee after trade
                     capital += (profit / entry_price) * trade_size
@@ -314,8 +320,8 @@ class Backtesting:
                     position = 0
 
             elif position == -1:
-                if (trend == "up" and data_test["RSI"].iloc[i] < 15) or \
-                (trend == "down" and (data_test["RSI"].iloc[i] < 15 or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i])):
+                if (trend == "up" and data_test["RSI"].iloc[i] < self.rsi_oversold) or \
+                (trend == "down" and (data_test["RSI"].iloc[i] < self.rsi_oversold or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i])):
                     exit_price = float(data_test["close"].iloc[i])
                     profit = ((exit_price - entry_price) * position) - 0.47  # Apply fee after trade
                     capital += (profit / entry_price) * trade_size
@@ -368,14 +374,14 @@ class Backtesting:
 
             if position == 0 and trend:
                 entry_price = float(data_test["close"].iloc[i])  # Ensure float conversion
-                if trend == "up" and (data_test["RSI"].iloc[i] < 15 or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i]):
+                if trend == "up" and (data_test["RSI"].iloc[i] < self.rsi_oversold or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i]):
                     position = 1
-                elif trend == "down" and data_test["RSI"].iloc[i] > 90:
+                elif trend == "down" and data_test["RSI"].iloc[i] > self.rsi_extreme_overbought:
                     position = -1
 
             elif position == 1:
-                if (trend == "up" and (data_test["RSI"].iloc[i] > 85 or data_test["close"].iloc[i] >= data_test["BB_Upper"].iloc[i])) or \
-                (trend == "down" and data_test["RSI"].iloc[i] > 90):
+                if (trend == "up" and (data_test["RSI"].iloc[i] > self.rsi_overbought or data_test["close"].iloc[i] >= data_test["BB_Upper"].iloc[i])) or \
+                (trend == "down" and data_test["RSI"].iloc[i] > self.rsi_extreme_overbought):
                     profit = (float(data_test["close"].iloc[i]) - float(entry_price)) - fee
                     capital += (profit / float(entry_price)) * trade_size
                     returns.append(profit / float(entry_price))
@@ -384,8 +390,8 @@ class Backtesting:
 
 
             elif position == -1:
-                if (trend == "up" and data_test["RSI"].iloc[i] < 15) or \
-                (trend == "down" and (data_test["RSI"].iloc[i] < 15 or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i])):
+                if (trend == "up" and data_test["RSI"].iloc[i] < self.rsi_oversold) or \
+                (trend == "down" and (data_test["RSI"].iloc[i] < self.rsi_oversold or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i])):
                     profit = ((float(data_test["close"].iloc[i]) - float(entry_price)) * position) - fee
                     capital += (profit / float(entry_price)) * trade_size
                     returns.append(profit / float(entry_price))
