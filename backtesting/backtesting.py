@@ -437,14 +437,14 @@ class Backtesting:
         # print("\n--- Running Backtest (100%) ---")
         # self.backtest_strategy(self.data)
 
-        # print("\n--- Split data ---")
-        self.split_data();
+        print("\n--- Split data ---")
+        # self.split_data();
         # self.split_data_sample()
-        # self.backtest_strategy(self.data)
+        self.backtest_strategy(self.data)
 
-        # trades = self.extract_trades(self.data)
-        # trades_df = pd.DataFrame(trades)
-        # trades_df.to_csv("trades_output.csv", index=False)
+        trades = self.extract_trades(self.data)
+        trades_df = pd.DataFrame(trades)
+        trades_df.to_csv("trades_output.csv", index=False)
         # print("Trades saved to trades_output.csv")
         # print(trades_df[:200])
         # self.split_data(0.8)

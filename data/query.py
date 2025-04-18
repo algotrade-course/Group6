@@ -143,6 +143,7 @@ WITH date_ranges AS (
     JOIN date_ranges dr 
         ON m.tickersymbol = dr.tickersymbol 
         AND DATE(m.datetime) BETWEEN dr.start_date AND dr.end_date
+    WHERE m.datetime::time BETWEEN TIME '09:00' AND TIME '14:30'
     GROUP BY datetime, date, symbol
 )
 , final_data AS (
