@@ -20,6 +20,8 @@ class Backtesting:
         rsi_extreme_overbought,
         data=None,
         daily_data=None,
+        data_in_sample=None,
+        data_out_sample=None
     ):
         self.daily_data = daily_data
         self.period_rsi = period_rsi
@@ -88,12 +90,14 @@ class Backtesting:
             train_size = self.in_sample_size
 
         split_index = int(len(self.data) * train_size)
-        self.train_data = self.data.iloc[:split_index].copy()
-        self.test_data = self.data.iloc[split_index:].copy()
+        self.data_in_sample = self.data.iloc[:split_index].copy()
+        self.data_out_sample = self.data.iloc[split_index:].copy()
 
         print(
-            f"Data split: {len(self.train_data)} (train), {len(self.test_data)} (test)"
+            f"Data split: {len(self.data_in_sample)} (train), {len(self.data_out_sample)} (test)"
         )
+        self.data_in_sample.to_csv("data_in_sample.csv", index=False)
+        self.data_out_sample.to_csv("data_out_sample.csv", index=False)
 
     def plot_candlestick_chart(self):
         if self.data is None or self.data.empty:
@@ -434,13 +438,14 @@ class Backtesting:
         # self.backtest_strategy(self.data)
 
         # print("\n--- Split data ---")
+        self.split_data();
         # self.split_data_sample()
-        self.backtest_strategy(self.data)
+        # self.backtest_strategy(self.data)
 
-        trades = self.extract_trades(self.data)
-        trades_df = pd.DataFrame(trades)
-        trades_df.to_csv("trades_output.csv", index=False)
-        print("Trades saved to trades_output.csv")
+        # trades = self.extract_trades(self.data)
+        # trades_df = pd.DataFrame(trades)
+        # trades_df.to_csv("trades_output.csv", index=False)
+        # print("Trades saved to trades_output.csv")
         # print(trades_df[:200])
         # self.split_data(0.8)
 

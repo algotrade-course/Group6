@@ -24,4 +24,4 @@ backtest.apply_indicators()
 backtest.run_backtest()
 
 # Run plot chart (Still have some problem related to connection)
-backtest.plot_candlestick_chart()
+# backtest.plot_candlestick_chart()
