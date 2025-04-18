@@ -32,12 +32,8 @@ class Backtesting:
         self.rsi_overbought = rsi_overbought
         self.rsi_extreme_overbought = rsi_extreme_overbought
         self.data = data
+        self.sharpe_ratio = None
 
-    # def initiate_data(self):
-    #     self.daily_data = DataFetcher()
-    #     self.data = self.daily_data.fetch_data()
-    #     self.daily_data.print_dataset()
-    #     # self.daily_data.save_to_csv("daily_data.csv")
     def initiate_data(self, use_csv=False, file_path="daily_data.csv"):
         self.daily_data = DataFetcher()
         if use_csv:
@@ -61,27 +57,8 @@ class Backtesting:
         self.data.reset_index(inplace=True)
         self.data["index"] = self.data.index
         pprint.pp(self.data[:1000])
-        return self.data
+        return self.data    
 
-    # def split_data_sample(self, start_date="2021-01-15", end_date="2021-12-31"):
-    #     if self.data is None or self.data.empty:
-    #         raise ValueError("No data available to split.")
-
-    #     # Ensure 'date' is in datetime format
-    #     self.data["date"] = pd.to_datetime(self.data["date"])
-
-    #     # Create train and test sets based on date range
-    #     self.train_data = self.data[
-    #         (self.data["date"] >= pd.to_datetime(start_date)) &
-    #         (self.data["date"] <= pd.to_datetime(end_date))
-    #     ].copy()
-
-    #     self.test_data = self.data[self.data["date"] > pd.to_datetime(end_date)].copy()
-
-    #     print(
-    #         f"Data split: {len(self.train_data)} (train from {start_date} to {end_date}), "
-    #         f"{len(self.test_data)} (test after {end_date})"
-    #     )
 
     def split_data(self, train_size=None):
         if self.data is None or self.data.empty:
@@ -355,7 +332,7 @@ class Backtesting:
 
 
     # Modify backtest_strategy to store returns and call plot_returns
-    def backtest_strategy(self, data_test, capital=1000000000, risk_per_trade=None):
+    def backtest_strategy(self, data_test, capital=1000000000, risk_per_trade=None, print_result=False):
         if data_test is None or data_test.empty:
             print("No data available for backtesting.")
             return
@@ -420,31 +397,35 @@ class Backtesting:
             (len([x for x in returns if x > 0]) / len(returns) * 100) if returns else 0
         )
         sharpe_ratio = calculate_sharpe_ratio(returns)
+
+        if self.sharpe_ratio is None:
+            self.sharpe_ratio = sharpe_ratio
         
+        
+        if print_result:
+            print(f"Final Capital: {capital:.2f} points")
+            print(f"Total Return: {(capital / initial_capital) * 100 - 100:.2f}%")
+            print(f"Win Rate: {win_rate:.2f}%")
+            print(f"Max Drawdown: {max_drawdown:.6f}%")
+            print(f"Sharpe Ratio: {sharpe_ratio:.6f}")
+            print(f"Number of Transactions: {len(closing_dates)}")
 
-        print(f"Final Capital: {capital:.2f} points")
-        print(f"Total Return: {(capital / initial_capital) * 100 - 100:.2f}%")
-        print(f"Win Rate: {win_rate:.2f}%")
-        print(f"Max Drawdown: {max_drawdown:.6f}%")
-        print(f"Sharpe Ratio: {sharpe_ratio:.6f}")
-        print(f"Number of Transactions: {len(closing_dates)}")
-
-        self.plot_returns(capital_map)
+            self.plot_returns(capital_map)
 
         return capital_map, len(closing_dates)
 
-    def run_backtest(self):
+    def run_backtest(self, extract_data = False, returns_sharp = False, print_result=False):
         # print("\n--- Running Backtest (100%) ---")
         # self.backtest_strategy(self.data)
 
         print("\n--- Split data ---")
-        # self.split_data();
-        # self.split_data_sample()
-        self.backtest_strategy(self.data)
+        self.split_data(self.in_sample_size)
+        self.backtest_strategy(self.data_in_sample, print_result=print_result)
 
-        trades = self.extract_trades(self.data)
-        trades_df = pd.DataFrame(trades)
-        trades_df.to_csv("trades_output.csv", index=False)
+        if extract_data:
+            trades = self.extract_trades(self.data)
+            trades_df = pd.DataFrame(trades)
+            trades_df.to_csv("trades_output.csv", index=False)
         # print("Trades saved to trades_output.csv")
         # print(trades_df[:200])
         # self.split_data(0.8)

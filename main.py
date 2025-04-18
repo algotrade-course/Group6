@@ -12,6 +12,7 @@ risk_per_trade = 0.1 # Percentage of total capital that used for each trade
 rsi_oversold = 18
 rsi_overbought = 78
 rsi_extreme_overbought = 87
+print_result = True
 backtest = Backtesting(period_rsi, period_bb, in_sample_size, risk_per_trade, rsi_oversold, rsi_overbought, rsi_extreme_overbought)
 
 # Fetch and load data
@@ -21,7 +22,7 @@ backtest.apply_indicators()
 # backtest.print_data()
 # # Run backtest strategy for 100% data
 # # Run backtest strategy for 80% in-sample data and 20% out-sample data
-backtest.run_backtest()
+backtest.run_backtest(print_result=print_result)
 
 # Run plot chart (Still have some problem related to connection)
 # backtest.plot_candlestick_chart()

@@ -11,8 +11,8 @@ def objectives(trial):
     in_sample_size = 0.8
     risk_per_trade = trial.suggest_float("risk_per_trade", 0.01, 0.5)
     rsi_oversold = trial.suggest_int("rsi_oversold", 5, 30)
-    rsi_overbought = trial.suggest_int("rsi_overbought", 70, 90)
-    rsi_extreme_overbought = trial.suggest_int("rsi_extreme_overbought", 80, 95)
+    rsi_overbought = trial.suggest_int("rsi_overbought", 70, 85)
+    rsi_extreme_overbought = trial.suggest_int("rsi_extreme_overbought", 85, 95)
 
     backtest = Backtesting(
         period_rsi,
@@ -24,10 +24,10 @@ def objectives(trial):
         rsi_extreme_overbought
     )
 
-    backtest.initiate_data()
+    backtest.initiate_data(True)
     backtest.apply_indicators()
 
-    sharpe_ratio = backtest.run_backtest(returns_sharpe=True)
+    sharpe_ratio = backtest.run_backtest(returns_sharpe=True, print_result=False)
 
     if sharpe_ratio is None or np.isnan(sharpe_ratio):
         return float("-inf")
