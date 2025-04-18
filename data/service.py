@@ -29,7 +29,9 @@ class DataFetcher:
         return self.df
 
     def process_data(self):
-        self.df.set_index('date', inplace=True) 
+        self.df.columns = [col.lower() for col in self.df.columns]  # normalize column names
+        if 'date' in self.df.columns:
+            self.df.set_index('date', inplace=True)
 
     def save_to_csv(self, file_path='output.csv'):
         if self.df is not None:
@@ -43,7 +45,13 @@ class DataFetcher:
             print(self.df.head(num_rows))
         else:
             print("No data available to display.")
-
+    def load_data_from_csv(self, file_path='daily_data.csv'):
+        try:
+            self.df = pd.read_csv(file_path, parse_dates=['date'])
+            self.process_data()  # Reuse the same processing (e.g. set index)
+            print(f"Data loaded from {file_path}")
+        except FileNotFoundError:
+            print(f"{file_path} not found.")
 
 
     

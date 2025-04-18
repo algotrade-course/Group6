@@ -15,7 +15,7 @@ rsi_extreme_overbought = 90
 backtest = Backtesting(period_rsi, period_bb, in_sample_size, risk_per_trade, rsi_oversold, rsi_overbought, rsi_extreme_overbought)
 
 # Fetch and load data
-backtest.initiate_data()
+backtest.initiate_data(True)
 # Apply indicators (RSI, Bollinger Bands, SMA)
 backtest.apply_indicators()
 # backtest.print_data()

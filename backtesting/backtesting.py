@@ -31,16 +31,25 @@ class Backtesting:
         self.rsi_extreme_overbought = rsi_extreme_overbought
         self.data = data
 
-    def initiate_data(self):
+    # def initiate_data(self):
+    #     self.daily_data = DataFetcher()
+    #     self.data = self.daily_data.fetch_data()
+    #     self.daily_data.print_dataset()
+    #     # self.daily_data.save_to_csv("daily_data.csv")
+    def initiate_data(self, use_csv=False, file_path="daily_data.csv"):
         self.daily_data = DataFetcher()
-        self.data = self.daily_data.fetch_data()
+        if use_csv:
+            self.daily_data.load_data_from_csv(file_path)
+        else:
+            self.data = self.daily_data.fetch_data()
+            self.daily_data.save_to_csv(file_path)
+        self.data = self.daily_data.df
         self.daily_data.print_dataset()
-        self.daily_data.save_to_csv("daily_data.csv")
 
     def print_data(self):
         if self.data is None:
             raise TypeError("Data is not initiated")
-        pprint.pp(self.data[:100])
+        pprint.pp(self.data[:1000])
 
     def apply_indicators(self):
         self.data = calculate_rsi(self.data, self.period_rsi)
@@ -49,28 +58,28 @@ class Backtesting:
         self.data = calculate_sma(self.data, 200)
         self.data.reset_index(inplace=True)
         self.data["index"] = self.data.index
-        
+        pprint.pp(self.data[:1000])
         return self.data
 
-    def split_data_sample(self, start_date="2021-01-15", end_date="2021-12-31"):
-        if self.data is None or self.data.empty:
-            raise ValueError("No data available to split.")
+    # def split_data_sample(self, start_date="2021-01-15", end_date="2021-12-31"):
+    #     if self.data is None or self.data.empty:
+    #         raise ValueError("No data available to split.")
 
-        # Ensure 'date' is in datetime format
-        self.data["date"] = pd.to_datetime(self.data["date"])
+    #     # Ensure 'date' is in datetime format
+    #     self.data["date"] = pd.to_datetime(self.data["date"])
 
-        # Create train and test sets based on date range
-        self.train_data = self.data[
-            (self.data["date"] >= pd.to_datetime(start_date)) &
-            (self.data["date"] <= pd.to_datetime(end_date))
-        ].copy()
+    #     # Create train and test sets based on date range
+    #     self.train_data = self.data[
+    #         (self.data["date"] >= pd.to_datetime(start_date)) &
+    #         (self.data["date"] <= pd.to_datetime(end_date))
+    #     ].copy()
 
-        self.test_data = self.data[self.data["date"] > pd.to_datetime(end_date)].copy()
+    #     self.test_data = self.data[self.data["date"] > pd.to_datetime(end_date)].copy()
 
-        print(
-            f"Data split: {len(self.train_data)} (train from {start_date} to {end_date}), "
-            f"{len(self.test_data)} (test after {end_date})"
-        )
+    #     print(
+    #         f"Data split: {len(self.train_data)} (train from {start_date} to {end_date}), "
+    #         f"{len(self.test_data)} (test after {end_date})"
+    #     )
 
     def split_data(self, train_size=None):
         if self.data is None or self.data.empty:
@@ -264,7 +273,7 @@ class Backtesting:
 
         fig.show()
 
-    def extract_trades(self, data_test, capital=1000, risk_per_trade=None):
+    def extract_trades(self, data_test, capital=1000000000, risk_per_trade=None):
         if data_test is None or data_test.empty:
             print("No data available to extract trades.")
             return []
@@ -424,12 +433,13 @@ class Backtesting:
         # print("\n--- Running Backtest (100%) ---")
         # self.backtest_strategy(self.data)
 
-        print("\n--- Split data ---")
-        self.split_data_sample()
-        self.backtest_strategy(self.train_data)
+        # print("\n--- Split data ---")
+        # self.split_data_sample()
+        # self.backtest_strategy(self.data)
 
-        trades = self.extract_trades(self.train_data)
+        trades = self.extract_trades(self.data)
         trades_df = pd.DataFrame(trades)
-        print(trades_df)
+        print(trades_df[:200])
+        # self.split_data(0.8)
 
 
