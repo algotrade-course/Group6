@@ -412,9 +412,6 @@ class Backtesting:
 
 
     def run_backtest(self, extract_data = False, returns_sharp = False, print_result=False):
-        # print("\n--- Running Backtest (100%) ---")
-        # self.backtest_strategy(self.data)
-
         self.split_data(self.in_sample_size, print_result=print_result)
         self.backtest_strategy(self.data_in_sample, print_result=print_result)
 
@@ -425,14 +422,9 @@ class Backtesting:
 
         if returns_sharp:
             return self.sharpe_ratio
-        # print("Trades saved to trades_output.csv")
-        # print(trades_df[:200])
-        # self.split_data(0.8)
+
     
     def run_backtest_no_fee(self, extract_data = False, returns_sharp = False, print_result=False):
-        # print("\n--- Running Backtest (100%) ---")
-        # self.backtest_strategy(self.data)
-
         self.split_data(self.in_sample_size, print_result=print_result)
         self.backtest_strategy(self.data_in_sample, print_result=print_result, fee_add=0)
 
@@ -460,9 +452,7 @@ if __name__ == "__main__":
     backtest.initiate_data(True)
     # Apply indicators (RSI, Bollinger Bands, SMA)
     backtest.apply_indicators()
-    # backtest.print_data()
-    # # Run backtest strategy for 100% data
-    # # Run backtest strategy for 80% in-sample data and 20% out-sample data
+
     backtest.run_backtest_no_fee(print_result=print_result)
 
     # Run plot chart (Still have some problem related to connection)

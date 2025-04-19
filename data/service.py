@@ -45,11 +45,12 @@ class DataFetcher:
             print(self.df.head(num_rows))
         else:
             print("No data available to display.")
+
     def load_data_from_csv(self, file_path='daily_data.csv'):
         try:
             self.df = pd.read_csv(file_path, parse_dates=['date'])
             self.process_data()  # Reuse the same processing (e.g. set index)
-            print(f"Data loaded from {file_path}")
+            # print(f"Data loaded from {file_path}")
         except FileNotFoundError:
             print(f"{file_path} not found.")
 
