@@ -17,6 +17,8 @@ class Backtesting:
         risk_per_trade,
         rsi_oversold,
         rsi_overbought,
+        stop_loss,
+        take_profit,
         data=None,
         daily_data=None,
         data_in_sample=None,
@@ -29,8 +31,11 @@ class Backtesting:
         self.risk_per_trade = risk_per_trade
         self.rsi_oversold = rsi_oversold
         self.rsi_overbought = rsi_overbought
+        self.stop_loss = stop_loss
+        self.take_profit = take_profit
         self.data = data
         self.sharpe_ratio = None
+        self.fee = 0.47
 
     def initiate_data(self, use_csv=False, file_path="daily_data.csv"):
         self.daily_data = DataFetcher()
@@ -40,12 +45,11 @@ class Backtesting:
             self.data = self.daily_data.fetch_data()
             self.daily_data.save_to_csv(file_path)
         self.data = self.daily_data.df
-        # self.daily_data.print_dataset()
 
     def print_data(self):
         if self.data is None:
             raise TypeError("Data is not initiated")
-        # pprint.pp(self.data[:1000])
+        pprint.pp(self.data[:1000])
 
     def apply_indicators(self):
         self.data = calculate_rsi(self.data, self.period_rsi)
@@ -54,11 +58,11 @@ class Backtesting:
         self.data = calculate_sma(self.data, 200)
         self.data.reset_index(inplace=True)
         self.data["index"] = self.data.index
-        # pprint.pp(self.data[:1000])
+        
         return self.data    
 
 
-    def split_data(self, train_size=None):
+    def split_data(self, train_size=None, print_result=False):
         if self.data is None or self.data.empty:
             raise ValueError("No data available to split.")
         if train_size is None:
@@ -68,9 +72,12 @@ class Backtesting:
         self.data_in_sample = self.data.iloc[:split_index].copy()
         self.data_out_sample = self.data.iloc[split_index:].copy()
 
-        print(
+        if print_result:
+            print("\n--- Split data ---")
+            print(
             f"Data split: {len(self.data_in_sample)} (train), {len(self.data_out_sample)} (test)"
         )
+        
         self.data_in_sample.to_csv("data_in_sample.csv", index=False)
         self.data_out_sample.to_csv("data_out_sample.csv", index=False)
 
@@ -330,14 +337,14 @@ class Backtesting:
 
 
     # Modify backtest_strategy to store returns and call plot_returns
-    def backtest_strategy(self, data_test, capital=1000000000, risk_per_trade=None, print_result=False):
+    def backtest_strategy(self, data_test, capital=1000000000, fee_add = 0.47, risk_per_trade=None, print_result=False):
         if data_test is None or data_test.empty:
             print("No data available for backtesting.")
             return
         if risk_per_trade is None:
             risk_per_trade = self.risk_per_trade
 
-        fee = 0.47
+        fee = fee_add
         position = 0
         entry_price = 0
         returns = []
@@ -368,23 +375,33 @@ class Backtesting:
                     position = -1
 
             elif position == 1:
-                if (trend == "up" and (data_test["RSI"].iloc[i] > self.rsi_overbought or data_test["close"].iloc[i] >= data_test["BB_Upper"].iloc[i])) or \
-                (trend == "down" and data_test["RSI"].iloc[i] > self.rsi_overbought):
-                    profit = (float(data_test["close"].iloc[i]) - float(entry_price)) - fee
-                    capital += (profit / float(entry_price)) * trade_size
-                    returns.append(profit / float(entry_price))
-                    closing_dates.append(current_date)
-                    position = 0  # Exit trade
+                current_price = float(data_test["close"].iloc[i])
+                price_change = (current_price - entry_price) / entry_price
 
+                if price_change <= -self.stop_loss or price_change >= self.take_profit or \
+                (trend == "up" and (data_test["RSI"].iloc[i] > self.rsi_overbought or current_price >= data_test["BB_Upper"].iloc[i])) or \
+                (trend == "down" and data_test["RSI"].iloc[i] > self.rsi_overbought):
+                    
+                    profit = (current_price - entry_price) - fee
+                    capital += (profit / entry_price) * trade_size
+                    returns.append(profit / entry_price)
+                    closing_dates.append(current_date)
+                    position = 0
 
             elif position == -1:
-                if (trend == "up" and data_test["RSI"].iloc[i] < self.rsi_oversold) or \
-                (trend == "down" and (data_test["RSI"].iloc[i] < self.rsi_oversold or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i])):
-                    profit = ((float(data_test["close"].iloc[i]) - float(entry_price)) * position) - fee
-                    capital += (profit / float(entry_price)) * trade_size
-                    returns.append(profit / float(entry_price))
+                current_price = float(data_test["close"].iloc[i])
+                price_change = (entry_price - current_price) / entry_price
+
+                if price_change <= -self.stop_loss or price_change >= self.take_profit or \
+                (trend == "up" and data_test["RSI"].iloc[i] < self.rsi_oversold) or \
+                (trend == "down" and (data_test["RSI"].iloc[i] < self.rsi_oversold or current_price <= data_test["BB_Lower"].iloc[i])):
+
+                    profit = ((current_price - entry_price) * position) - fee
+                    capital += (profit / entry_price) * trade_size
+                    returns.append(profit / entry_price)
                     closing_dates.append(current_date)
-                    position = 0  # Exit trade
+                    position = 0
+
 
             capital_map[current_date] = capital
 
@@ -411,13 +428,86 @@ class Backtesting:
             self.plot_returns(capital_map)
 
         return capital_map, len(closing_dates)
+    
+    def backtest_strategy_1(self, data_test, capital=1000000000, risk_per_trade=None, print_result=False):
+        if data_test is None or data_test.empty:
+            print("No data available for backtesting.")
+            return
+        if risk_per_trade is None:
+            risk_per_trade = self.risk_per_trade
+
+        fee = 0.47
+        position = 0
+        entry_price = 0
+        returns = []
+        closing_dates = []
+        initial_capital = capital
+        capital_map = {data_test["date"].iloc[0]: capital}
+
+        for i in range(2, len(data_test)):
+            current_date = data_test["date"].iloc[i]
+            trade_size = capital * risk_per_trade
+
+            if position == 0:
+                entry_price = float(data_test["close"].iloc[i])  # Ensure float conversion
+                # Buy condition
+                if data_test["RSI"].iloc[i] < self.rsi_oversold or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i]:
+                    position = 1
+                # Sell/short condition
+                elif data_test["RSI"].iloc[i] > self.rsi_overbought:
+                    position = -1
+
+            elif position == 1:
+                current_price = float(data_test["close"].iloc[i])
+                price_change = (current_price - entry_price) / entry_price
+
+                if price_change <= -self.stop_loss or price_change >= self.take_profit or \
+                data_test["RSI"].iloc[i] > self.rsi_overbought or current_price >= data_test["BB_Upper"].iloc[i]:
+                    profit = (current_price - entry_price) - fee
+                    capital += (profit / entry_price) * trade_size
+                    returns.append(profit / entry_price)
+                    closing_dates.append(current_date)
+                    position = 0
+
+            elif position == -1:
+                current_price = float(data_test["close"].iloc[i])
+                price_change = (entry_price - current_price) / entry_price
+
+                if price_change <= -self.stop_loss or price_change >= self.take_profit or \
+                data_test["RSI"].iloc[i] < self.rsi_oversold or current_price <= data_test["BB_Lower"].iloc[i]:
+                    profit = ((current_price - entry_price) * position) - fee
+                    capital += (profit / entry_price) * trade_size
+                    returns.append(profit / entry_price)
+                    closing_dates.append(current_date)
+                    position = 0
+
+            capital_map[current_date] = capital
+
+        max_drawdown = calculate_max_drawdown(capital_map)
+        win_rate = (len([x for x in returns if x > 0]) / len(returns) * 100) if returns else 0
+        sharpe_ratio = calculate_sharpe_ratio(returns)
+
+        if self.sharpe_ratio is None:
+            self.sharpe_ratio = sharpe_ratio
+
+        if print_result:
+            print(f"Final Capital: {capital:.2f} points")
+            print(f"Total Return: {(capital / initial_capital) * 100 - 100:.2f}%")
+            print(f"Win Rate: {win_rate:.2f}%")
+            print(f"Max Drawdown: {max_drawdown:.6f}%")
+            print(f"Sharpe Ratio: {sharpe_ratio:.6f}")
+            print(f"Number of Transactions: {len(closing_dates)}")
+            self.plot_returns(capital_map)
+
+        return capital_map, len(closing_dates)
+
+
 
     def run_backtest(self, extract_data = False, returns_sharp = False, print_result=False):
         # print("\n--- Running Backtest (100%) ---")
         # self.backtest_strategy(self.data)
 
-        print("\n--- Split data ---")
-        self.split_data(self.in_sample_size)
+        self.split_data(self.in_sample_size, print_result=print_result)
         self.backtest_strategy(self.data_in_sample, print_result=print_result)
 
         if extract_data:
@@ -430,16 +520,33 @@ class Backtesting:
         # print("Trades saved to trades_output.csv")
         # print(trades_df[:200])
         # self.split_data(0.8)
+    
+    def run_backtest_no_fee(self, extract_data = False, returns_sharp = False, print_result=False):
+        # print("\n--- Running Backtest (100%) ---")
+        # self.backtest_strategy(self.data)
+
+        self.split_data(self.in_sample_size, print_result=print_result)
+        self.backtest_strategy(self.data_in_sample, print_result=print_result, fee_add=0)
+
+        if extract_data:
+            trades = self.extract_trades(self.data)
+            trades_df = pd.DataFrame(trades)
+            trades_df.to_csv("trades_output.csv", index=False)
+
+        if returns_sharp:
+            return self.sharpe_ratio
 
 if __name__ == "__main__":
     in_sample_size = 0.8 # Percentage of data that used for the in sample test 
-    period_rsi = 20
-    period_bb = 99
-    risk_per_trade = 0.4 # Percentage of total capital that used for each trade 
-    rsi_oversold = 10
-    rsi_overbought = 82
+    period_rsi = 19
+    period_bb = 30
+    risk_per_trade = 0.1 # Percentage of total capital that used for each trade 
+    rsi_oversold = 7
+    rsi_overbought = 85
+    stop_loss = 0.1
+    take_profit = 0.3
     print_result = True
-    backtest = Backtesting(period_rsi, period_bb, in_sample_size, risk_per_trade, rsi_oversold, rsi_overbought)
+    backtest = Backtesting(period_rsi, period_bb, in_sample_size, risk_per_trade, rsi_oversold, rsi_overbought, stop_loss, take_profit)
 
     # Fetch and load data
     backtest.initiate_data(True)
