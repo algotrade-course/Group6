@@ -37,10 +37,10 @@ def objectives(trial):
     return sharpe_ratio
 
 
-def run_optimization():
+def run_optimization(n_trials):
     print("\nStarting Hyperparameter Optimization...\n")
     study = optuna.create_study(direction="maximize")
-    study.optimize(objectives, n_trials=5)
+    study.optimize(objectives, n_trials)
 
     print("\n--- Optimization Complete ---")
     print("Best Hyperparameters:")
@@ -48,7 +48,6 @@ def run_optimization():
         print(f"{k}: {v}")
     print(f"Best Sharpe Ratio: {study.best_value:.6f}")
 
-    # Prepare result dictionary
     result = {
         "best_params": study.best_params,
         "best_sharpe_ratio": study.best_value,
@@ -125,14 +124,18 @@ def main_menu():
         print("2. Run Backtest without fee")
         print("3. Optimize Strategy")
         print("4. Exit")
-        choice = input("Choose an option (1-3): ")
+        choice = input("Choose an option: ")
 
         if choice == "1":
             run_backtesting()
         elif choice == "2":
             run_backtesting_no_fee()
-        elif choice == "3":
-            run_optimization()
+        elif choice == "3":            
+            try:
+                n = int(input("Enter number of optimization trials: "))
+                run_optimization(n)
+            except ValueError:
+                print("Please enter a valid number.")
         elif choice == "4":
             print ("Exiting...")
             break

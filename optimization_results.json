@@ -1,12 +1,12 @@
 {
     "best_params": {
-        "period_bb": 33,
-        "period_rsi": 12,
-        "risk_per_trade": 0.5,
-        "rsi_oversold": 23.0,
-        "rsi_overbought": 91.0,
-        "stop_loss": 0.25,
-        "take_profit": 0.3
+        "period_bb": 23,
+        "period_rsi": 11,
+        "risk_per_trade": 0.4,
+        "rsi_oversold": 11.0,
+        "rsi_overbought": 74.0,
+        "stop_loss": 0.15000000000000002,
+        "take_profit": 0.25
     },
-    "best_sharpe_ratio": -0.12214378870909433
+    "best_sharpe_ratio": -0.10273174093878534
 }

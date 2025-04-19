@@ -51,17 +51,12 @@ The sample size for in sample data with 80% of the full data. The optimization w
 ```
     study = optuna.create_study(direction="maximize")
     study.optimize(objectives, n_trials=100)
-
-    print("\n--- Optimization Complete ---")
-    print("Best Hyperparameters:")
-    for k, v in study.best_params.items():
-        print(f"{k}: {v}")
     print(f"Best Sharpe Ratio: {study.best_value:.6f}")
 
 ```
 
 
 ### Result
-
+Current 
 
 
