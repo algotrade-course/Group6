@@ -6,13 +6,12 @@ from backtesting.backtesting import *
 # warnings.filterwarnings("ignore")
 
 def objectives(trial):
+    in_sample_size = 0.8
     period_rsi = trial.suggest_int("period_rsi", 5, 20)
     period_bb = trial.suggest_int("period_bb", 10, 100)
-    in_sample_size = 0.8
     risk_per_trade = trial.suggest_float("risk_per_trade", 0.01, 0.5)
     rsi_oversold = trial.suggest_int("rsi_oversold", 5, 30)
-    rsi_overbought = trial.suggest_int("rsi_overbought", 70, 85)
-    rsi_extreme_overbought = trial.suggest_int("rsi_extreme_overbought", 85, 95)
+    rsi_overbought = trial.suggest_int("rsi_overbought", 70, 95)
 
     backtest = Backtesting(
         period_rsi,
@@ -21,7 +20,6 @@ def objectives(trial):
         risk_per_trade,
         rsi_oversold,
         rsi_overbought,
-        rsi_extreme_overbought
     )
 
     backtest.initiate_data(True)
