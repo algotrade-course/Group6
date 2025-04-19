@@ -2,6 +2,8 @@ import optuna
 import warnings
 from backtesting.backtesting import Backtesting
 import numpy as np
+import json
+import os
 
 warnings.filterwarnings("ignore")
 
@@ -38,13 +40,28 @@ def objectives(trial):
 def run_optimization():
     print("\nStarting Hyperparameter Optimization...\n")
     study = optuna.create_study(direction="maximize")
-    study.optimize(objectives, n_trials=100)
+    study.optimize(objectives, n_trials=5)
 
     print("\n--- Optimization Complete ---")
     print("Best Hyperparameters:")
     for k, v in study.best_params.items():
         print(f"{k}: {v}")
     print(f"Best Sharpe Ratio: {study.best_value:.6f}")
+
+    # Prepare result dictionary
+    result = {
+        "best_params": study.best_params,
+        "best_sharpe_ratio": study.best_value,
+    }
+
+    # Define file path
+    result_path = os.path.join(os.getcwd(), "optimization_results.json")
+
+    # Write to JSON file
+    with open(result_path, "w") as f:
+        json.dump(result, f, indent=4)
+
+    print(f"\nResults saved to: {result_path}")
 
 
 def run_backtesting():
