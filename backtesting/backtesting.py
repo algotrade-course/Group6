@@ -336,7 +336,7 @@ class Backtesting:
         return trades
 
 
-    # Modify backtest_strategy to store returns and call plot_returns
+    # Modify backtest_strategy to store returns and call plot_returns    
     def backtest_strategy(self, data_test, capital=1000000000, fee_add = 0.47, risk_per_trade=None, print_result=False):
         if data_test is None or data_test.empty:
             print("No data available for backtesting.")
@@ -345,98 +345,6 @@ class Backtesting:
             risk_per_trade = self.risk_per_trade
 
         fee = fee_add
-        position = 0
-        entry_price = 0
-        returns = []
-        closing_dates = []
-        trend = None
-        initial_capital = capital
-        capital_map = {data_test["date"].iloc[0]: capital}
-
-        for i in range(2, len(data_test)):
-            current_date = data_test["date"].iloc[i]
-            
-            # Existing logic to determine SMA crossover
-            sma_diff_prev = data_test["SMA50"].iloc[i - 1] - data_test["SMA200"].iloc[i - 1]
-            sma_diff_now = data_test["SMA50"].iloc[i] - data_test["SMA200"].iloc[i]
-            
-            if sma_diff_prev < 0 and sma_diff_now > 0:
-                trend = "up"
-            elif sma_diff_prev > 0 and sma_diff_now < 0:
-                trend = "down"
-
-            trade_size = capital * risk_per_trade
-
-            if position == 0 and trend:
-                entry_price = float(data_test["close"].iloc[i])  # Ensure float conversion
-                if trend == "up" and (data_test["RSI"].iloc[i] < self.rsi_oversold or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i]):
-                    position = 1
-                elif trend == "down" and data_test["RSI"].iloc[i] > self.rsi_overbought:
-                    position = -1
-
-            elif position == 1:
-                current_price = float(data_test["close"].iloc[i])
-                price_change = (current_price - entry_price) / entry_price
-
-                if price_change <= -self.stop_loss or price_change >= self.take_profit or \
-                (trend == "up" and (data_test["RSI"].iloc[i] > self.rsi_overbought or current_price >= data_test["BB_Upper"].iloc[i])) or \
-                (trend == "down" and data_test["RSI"].iloc[i] > self.rsi_overbought):
-                    
-                    profit = (current_price - entry_price) - fee
-                    capital += (profit / entry_price) * trade_size
-                    returns.append(profit / entry_price)
-                    closing_dates.append(current_date)
-                    position = 0
-
-            elif position == -1:
-                current_price = float(data_test["close"].iloc[i])
-                price_change = (entry_price - current_price) / entry_price
-
-                if price_change <= -self.stop_loss or price_change >= self.take_profit or \
-                (trend == "up" and data_test["RSI"].iloc[i] < self.rsi_oversold) or \
-                (trend == "down" and (data_test["RSI"].iloc[i] < self.rsi_oversold or current_price <= data_test["BB_Lower"].iloc[i])):
-
-                    profit = ((current_price - entry_price) * position) - fee
-                    capital += (profit / entry_price) * trade_size
-                    returns.append(profit / entry_price)
-                    closing_dates.append(current_date)
-                    position = 0
-
-
-            capital_map[current_date] = capital
-
-        # Max Drawdown (Peak-to-Trough Drop)
-        max_drawdown = calculate_max_drawdown(capital_map)
-        # Win Rate
-        win_rate = (
-            (len([x for x in returns if x > 0]) / len(returns) * 100) if returns else 0
-        )
-        sharpe_ratio = calculate_sharpe_ratio(returns)
-
-        if self.sharpe_ratio is None:
-            self.sharpe_ratio = sharpe_ratio
-        
-        
-        if print_result:
-            print(f"Final Capital: {capital:.2f} points")
-            print(f"Total Return: {(capital / initial_capital) * 100 - 100:.2f}%")
-            print(f"Win Rate: {win_rate:.2f}%")
-            print(f"Max Drawdown: {max_drawdown:.6f}%")
-            print(f"Sharpe Ratio: {sharpe_ratio:.6f}")
-            print(f"Number of Transactions: {len(closing_dates)}")
-
-            self.plot_returns(capital_map)
-
-        return capital_map, len(closing_dates)
-    
-    def backtest_strategy_1(self, data_test, capital=1000000000, risk_per_trade=None, print_result=False):
-        if data_test is None or data_test.empty:
-            print("No data available for backtesting.")
-            return
-        if risk_per_trade is None:
-            risk_per_trade = self.risk_per_trade
-
-        fee = 0.47
         position = 0
         entry_price = 0
         returns = []
@@ -451,7 +359,7 @@ class Backtesting:
             if position == 0:
                 entry_price = float(data_test["close"].iloc[i])  # Ensure float conversion
                 # Buy condition
-                if data_test["RSI"].iloc[i] < self.rsi_oversold or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i]:
+                if data_test["RSI"].iloc[i] < self.rsi_oversold and data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i]:
                     position = 1
                 # Sell/short condition
                 elif data_test["RSI"].iloc[i] > self.rsi_overbought:
@@ -538,13 +446,13 @@ class Backtesting:
 
 if __name__ == "__main__":
     in_sample_size = 0.8 # Percentage of data that used for the in sample test 
-    period_rsi = 19
-    period_bb = 30
-    risk_per_trade = 0.1 # Percentage of total capital that used for each trade 
-    rsi_oversold = 7
-    rsi_overbought = 85
+    period_bb = 36
+    period_rsi = 6
+    risk_per_trade = 0.2 # Percentage of total capital that used for each trade 
+    rsi_oversold = 5
+    rsi_overbought = 71
     stop_loss = 0.1
-    take_profit = 0.3
+    take_profit = 0.25
     print_result = True
     backtest = Backtesting(period_rsi, period_bb, in_sample_size, risk_per_trade, rsi_oversold, rsi_overbought, stop_loss, take_profit)
 
@@ -555,7 +463,7 @@ if __name__ == "__main__":
     # backtest.print_data()
     # # Run backtest strategy for 100% data
     # # Run backtest strategy for 80% in-sample data and 20% out-sample data
-    backtest.run_backtest(print_result=print_result)
+    backtest.run_backtest_no_fee(print_result=print_result)
 
     # Run plot chart (Still have some problem related to connection)
     # backtest.plot_candlestick_chart()
