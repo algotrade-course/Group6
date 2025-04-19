@@ -7,11 +7,11 @@ from backtesting.backtesting import *
 
 def objectives(trial):
     in_sample_size = 0.8
-    period_rsi = trial.suggest_int("period_rsi", 5, 20)
-    period_bb = trial.suggest_int("period_bb", 10, 100)
-    risk_per_trade = trial.suggest_float("risk_per_trade", 0.01, 0.5)
-    rsi_oversold = trial.suggest_int("rsi_oversold", 5, 30)
-    rsi_overbought = trial.suggest_int("rsi_overbought", 70, 95)
+    period_rsi = trial.suggest_int("period_rsi", 5, 20, step = 1)
+    period_bb = trial.suggest_int("period_bb", 10, 100, step = 1)
+    risk_per_trade = trial.suggest_float("risk_per_trade", 0.1, 0.5, step = 0.1)
+    rsi_oversold = trial.suggest_int("rsi_oversold", 5, 30, step = 1)
+    rsi_overbought = trial.suggest_int("rsi_overbought", 70, 95, step = 1)
 
     backtest = Backtesting(
         period_rsi,
@@ -25,7 +25,7 @@ def objectives(trial):
     backtest.initiate_data(True)
     backtest.apply_indicators()
 
-    sharpe_ratio = backtest.run_backtest(returns_sharpe=True, print_result=False)
+    sharpe_ratio = backtest.run_backtest(returns_sharp=True, print_result=False)
 
     if sharpe_ratio is None or np.isnan(sharpe_ratio):
         return float("-inf")

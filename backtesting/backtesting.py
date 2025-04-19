@@ -40,12 +40,12 @@ class Backtesting:
             self.data = self.daily_data.fetch_data()
             self.daily_data.save_to_csv(file_path)
         self.data = self.daily_data.df
-        self.daily_data.print_dataset()
+        # self.daily_data.print_dataset()
 
     def print_data(self):
         if self.data is None:
             raise TypeError("Data is not initiated")
-        pprint.pp(self.data[:1000])
+        # pprint.pp(self.data[:1000])
 
     def apply_indicators(self):
         self.data = calculate_rsi(self.data, self.period_rsi)
@@ -54,7 +54,7 @@ class Backtesting:
         self.data = calculate_sma(self.data, 200)
         self.data.reset_index(inplace=True)
         self.data["index"] = self.data.index
-        pprint.pp(self.data[:1000])
+        # pprint.pp(self.data[:1000])
         return self.data    
 
 
@@ -424,8 +424,31 @@ class Backtesting:
             trades = self.extract_trades(self.data)
             trades_df = pd.DataFrame(trades)
             trades_df.to_csv("trades_output.csv", index=False)
+
+        if returns_sharp:
+            return self.sharpe_ratio
         # print("Trades saved to trades_output.csv")
         # print(trades_df[:200])
         # self.split_data(0.8)
 
+if __name__ == "__main__":
+    in_sample_size = 0.8 # Percentage of data that used for the in sample test 
+    period_rsi = 20
+    period_bb = 99
+    risk_per_trade = 0.4 # Percentage of total capital that used for each trade 
+    rsi_oversold = 10
+    rsi_overbought = 82
+    print_result = True
+    backtest = Backtesting(period_rsi, period_bb, in_sample_size, risk_per_trade, rsi_oversold, rsi_overbought)
 
+    # Fetch and load data
+    backtest.initiate_data(True)
+    # Apply indicators (RSI, Bollinger Bands, SMA)
+    backtest.apply_indicators()
+    # backtest.print_data()
+    # # Run backtest strategy for 100% data
+    # # Run backtest strategy for 80% in-sample data and 20% out-sample data
+    backtest.run_backtest(print_result=print_result)
+
+    # Run plot chart (Still have some problem related to connection)
+    # backtest.plot_candlestick_chart()

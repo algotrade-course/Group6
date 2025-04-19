@@ -5,15 +5,14 @@ import numpy as np
 import plotly.graph_objects as go
 import plotly.subplots as sp
 
-period_rsi = 12
-period_bb = 25
-in_sample_size = 0.7 # Percentage of data that used for the in sample test 
-risk_per_trade = 0.1 # Percentage of total capital that used for each trade 
-rsi_oversold = 18
-rsi_overbought = 78
-rsi_extreme_overbought = 87
+in_sample_size = 0.8 # Percentage of data that used for the in sample test 
+period_rsi = 20
+period_bb = 99
+risk_per_trade = 0.4 # Percentage of total capital that used for each trade 
+rsi_oversold = 10
+rsi_overbought = 82
 print_result = True
-backtest = Backtesting(period_rsi, period_bb, in_sample_size, risk_per_trade, rsi_oversold, rsi_overbought, rsi_extreme_overbought)
+backtest = Backtesting(period_rsi, period_bb, in_sample_size, risk_per_trade, rsi_oversold, rsi_overbought)
 
 # Fetch and load data
 backtest.initiate_data(True)
