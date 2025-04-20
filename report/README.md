@@ -30,8 +30,7 @@ Bollinger Bands are used to identify overbought or oversold conditions, as well 
 -   By using both indicators in conjunction, the strategy avoids relying solely on price movement or trend-following logic (e.g., moving averages), and instead seeks trades where both price behavior and volatility context align.
 
 ## Trading (Algorithm) Hypotheses
-- Describe the Trading Hypotheses
-- Step 1 of the Nine-Step
+- When the RSI value is extremely low (indicating oversold conditions) and the price touches the lower Bollinger Band, an upward price reversal is likely. Conversely, when the RSI is extremely high (indicating overbought conditions), a downward reversal is expected. The strategy also employs stop-loss and take-profit levels to manage risk and lock in gains.
 
 ## Data
 - Data source
