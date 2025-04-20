@@ -30,7 +30,7 @@ def objectives(trial):
 
     backtest.initiate_data(True)
     backtest.apply_indicators()
-    
+
     total_return = backtest.run_backtest(returns_total_return=True)
     if total_return is None or np.isnan(total_return):
         return float("-inf")
@@ -128,13 +128,32 @@ def run_backtest_from_optimized_params():
 
     with open(result_path, "r") as f:
         result = json.load(f)
-    
+
     params = result["best_params"]
-    
+
+    # Ask user which dataset to use
+    print("\nWhich dataset do you want to run the backtest on?")
+    print("1. In-sample data")
+    print("2. Out-of-sample data")
+    print("3. All data")
+    dataset_choice = input("Enter choice (1/2/3): ").strip()
+
+    # Set flags for backtesting
+    in_sample_flag = False
+    out_sample_flag = False
+
+    if dataset_choice == "1":
+        in_sample_flag = True
+    elif dataset_choice == "2":
+        out_sample_flag = True
+    elif dataset_choice != "3":
+        print("Invalid choice. Defaulting to in-sample data.")
+        in_sample_flag = True
+
     backtest = Backtesting(
         params["period_rsi"],
         params["period_bb"],
-        0.8,  # in_sample_size is fixed
+        0.8,  # in_sample_size is still used internally for splitting
         params["risk_per_trade"],
         params["rsi_oversold"],
         params["rsi_overbought"],
@@ -144,7 +163,12 @@ def run_backtest_from_optimized_params():
 
     backtest.initiate_data(True)
     backtest.apply_indicators()
-    backtest.run_backtest(print_result=True)
+    backtest.run_backtest(
+        print_result=True,
+        in_sample=in_sample_flag,
+        out_sample=out_sample_flag
+    )
+
 
 
 def main_menu():
