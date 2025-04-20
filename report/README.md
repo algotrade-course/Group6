@@ -56,7 +56,6 @@ The dataset is **time-series financial data** and includes the following fields 
 After indicators are calculated, additional fields are appended, such as:
 - `RSI`: Relative Strength Index values  
 - `BB_Upper`, `BB_Lower`: Bollinger Bands (Upper and Lower)  
-- `SMA50`, `SMA200`: Simple Moving Averages (even though not used in final strategy)
 
 ---
 
