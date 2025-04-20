@@ -33,15 +33,46 @@ Bollinger Bands are used to identify overbought or oversold conditions, as well 
 - When the RSI value is extremely low (indicating oversold conditions) and the price touches the lower Bollinger Band, an upward price reversal is likely. Conversely, when the RSI is extremely high (indicating overbought conditions), a downward reversal is expected. The strategy also employs stop-loss and take-profit levels to manage risk and lock in gains.
 
 ## Data
-- Data source
-- Data type
-- Data period
-- How to get the input data?
-- How to store the output data?
-### Data collection
-- Step 2 of the Nine-Step
-### Data Processing
-- Step 3 of the Nine-Step
+
+### Data Source
+
+The historical market data used in this project is collected from the **VN30F1M** (Vietnam's Futures Index) dataset, which contains **minute-level intraday price data**. This dataset reflects real trading activity in a liquid futures market, making it suitable for testing short-term trading strategies.
+
+The data is either fetched through an external data API or read from a local CSV file (`daily_data.csv`) for reproducibility and offline processing. The `DataFetcher` class in the code handles this logic.
+
+---
+
+### Data Type
+
+The dataset is **time-series financial data** and includes the following fields for each minute interval:
+
+- `date`: Timestamp of the price record  
+- `open`: Opening price  
+- `high`: Highest price during the interval  
+- `low`: Lowest price during the interval  
+- `close`: Closing price  
+- `volume`: Trading volume  
+
+After indicators are calculated, additional fields are appended, such as:
+- `RSI`: Relative Strength Index values  
+- `BB_Upper`, `BB_Lower`: Bollinger Bands (Upper and Lower)  
+- `SMA50`, `SMA200`: Simple Moving Averages (even though not used in final strategy)
+
+---
+
+### Data Period
+
+The exact time span of the dataset can vary based on the CSV file used. From the file structure and example plots in the code, the data spans several months of **minute-level trading data**. This granular data is suitable for high-frequency or short-horizon strategy evaluation.
+
+---
+
+### How to Get the Input Data?
+
+The data is initialized in the script via:
+
+```python
+backtest.initiate_data(use_csv=True)
+```
 
 ## Implementation
 - Briefly describe the implemetation.
