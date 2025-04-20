@@ -35,6 +35,7 @@ class Backtesting:
         self.take_profit = take_profit
         self.data = data
         self.sharpe_ratio = None
+        self.total_return = None
         self.fee = 0.47
 
     def initiate_data(self, use_csv=False, file_path="daily_data.csv"):
@@ -395,8 +396,20 @@ class Backtesting:
         win_rate = (len([x for x in returns if x > 0]) / len(returns) * 100) if returns else 0
         sharpe_ratio = calculate_sharpe_ratio(returns)
 
+        total_return = (capital / initial_capital) * 100 - 100
+        number_of_trades = len(closing_dates)
+
         if self.sharpe_ratio is None:
-            self.sharpe_ratio = sharpe_ratio
+            if total_return < -30:
+                self.sharpe_ratio = -float('inf')
+            else:
+                self.sharpe_ratio = sharpe_ratio
+        
+        if self.total_return is None:
+            if number_of_trades < 300:
+                self.total_return = -float('inf')
+            else:
+                self.total_return = total_return
 
         if print_result:
             print(f"Final Capital: {capital:.2f} points")
@@ -411,7 +424,7 @@ class Backtesting:
 
 
 
-    def run_backtest(self, extract_data = False, returns_sharp = False, print_result=False):
+    def run_backtest(self, extract_data = False, returns_sharp = False, print_result=False, returns_total_return = False):
         self.split_data(self.in_sample_size, print_result=print_result)
         self.backtest_strategy(self.data_in_sample, print_result=print_result)
 
@@ -422,6 +435,9 @@ class Backtesting:
 
         if returns_sharp:
             return self.sharpe_ratio
+        
+        if returns_total_return:
+            return self.total_return
 
     
     def run_backtest_no_fee(self, extract_data = False, returns_sharp = False, print_result=False):
