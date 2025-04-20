@@ -1,13 +1,8 @@
-import optuna
-import warnings
-from backtesting.backtesting import Backtesting
-import numpy as np
-import json
-import os
-import subprocess
 import sys
-
-warnings.filterwarnings("ignore")
+import subprocess  # Add this import
+import warnings
+import os
+import json
 
 # Mapping of import names to pip install names
 required_packages = {
@@ -37,6 +32,15 @@ def check_and_install_packages():
         else:
             print("\nCannot proceed without installing the required packages. Exiting...")
             sys.exit(1)
+
+check_and_install_packages()
+
+import optuna
+from backtesting.backtesting import Backtesting
+import numpy as np
+
+
+warnings.filterwarnings("ignore")
 
 def objectives(trial):
     in_sample_size = 0.8
@@ -203,7 +207,6 @@ def run_backtest_from_optimized_params():
 
 
 def main_menu():
-    check_and_install_packages()
     while True:
         print("\n=== Trading Strategy Menu ===")
         print("1. Run Backtest")
@@ -227,6 +230,7 @@ def main_menu():
             break
         else:
             print("Invalid choice. Please select 1, 2, or 3.")
+
 
 if __name__ == "__main__":
     main_menu()

@@ -12,27 +12,26 @@ git clone https://github.com/algotrade-course/Group6.git
 cd Group6
 ```
 
-### Step 3: Install the Required Packages
+### Step 3: Create the new environment
 ```bash
-pip install pandas
-pip install numpy
-pip install mplfinance
-pip install plotly
-pip install psycopg2-binary
-pip install optuna
+python -m venv envgroup6
 ```
 
-### Step 4: Execute the Code
+### Step 4: Execute the environment
 ```bash
+source myenv/bin/activate
+```
+
+### Step 5: Execute the code
+```
 python main.py
 ```
-
-### Step 5: Choose an Option
+After executing this command, if the environment lacks some packages for compiling, there would be an annoucement
 ```
-1. Run Backtest  
-2. Run Backtest without fee  
-3. Optimize Strategy
+The following required packages are missing: pandas, numpy, mplfinance, plotly, psycopg2-binary, optuna
+Do you want to install them now? (y/n):
 ```
+Click y to install. Then re-execute the code 
 
 ## Optimization
 ### Parameters
