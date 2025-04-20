@@ -173,22 +173,24 @@ def run_backtest_from_optimized_params():
     print("3. All data")
     dataset_choice = input("Enter choice (1/2/3): ").strip()
 
-    # Set flags for backtesting
     in_sample_flag = False
     out_sample_flag = False
+    all_sample_flag = False
 
     if dataset_choice == "1":
         in_sample_flag = True
     elif dataset_choice == "2":
         out_sample_flag = True
-    elif dataset_choice != "3":
+    elif dataset_choice == "3":
+        all_sample_flag = True
+    else:
         print("Invalid choice. Defaulting to in-sample data.")
         in_sample_flag = True
 
     backtest = Backtesting(
         params["period_rsi"],
         params["period_bb"],
-        0.8,  # in_sample_size is still used internally for splitting
+        0.8,  # in_sample_size for splitting
         params["risk_per_trade"],
         params["rsi_oversold"],
         params["rsi_overbought"],
@@ -198,11 +200,13 @@ def run_backtest_from_optimized_params():
 
     backtest.initiate_data(True)
     backtest.apply_indicators()
+    
     backtest.run_backtest(
         print_result=True,
-        in_sample=in_sample_flag,
+        all_sample=all_sample_flag,
         out_sample=out_sample_flag
     )
+
 
 
 

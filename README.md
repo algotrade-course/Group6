@@ -35,7 +35,7 @@ Click y to install. Then re-execute the code
 
 ## Optimization
 ### Parameters
-The following results were generated using Optuna libary after 100 trials with the following parameters: 
+The following results were generated using Optuna libary after 200 trials with the following parameters: 
 ```
     period_bb = trial.suggest_int("period_bb", 20, 30, step=1)
     period_rsi = trial.suggest_int("period_rsi", 5, 20, step=1)
@@ -53,5 +53,14 @@ The sample size for in sample data with 80% of the full data. The optimization w
 ### Result
 Recently, the set of parameters which results in the highest returns in in-sample data set is 
 ```
-
+--- Optimization Complete ---
+Best Hyperparameters:
+period_bb: 23
+period_rsi: 20
+risk_per_trade: 0.1
+rsi_oversold: 15.0
+rsi_overbought: 86.0
+stop_loss: 0.1
+take_profit: 0.1
+Best Returns: -2.767913
 ```
