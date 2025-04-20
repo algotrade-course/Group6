@@ -4,8 +4,39 @@ from backtesting.backtesting import Backtesting
 import numpy as np
 import json
 import os
+import subprocess
+import sys
 
 warnings.filterwarnings("ignore")
+
+# Mapping of import names to pip install names
+required_packages = {
+    "pandas": "pandas",
+    "numpy": "numpy",
+    "mplfinance": "mplfinance",
+    "plotly": "plotly",
+    "psycopg2": "psycopg2-binary",  # correct import name -> pip install name
+    "optuna": "optuna"
+}
+
+def check_and_install_packages():
+    missing = []
+    for import_name, pip_name in required_packages.items():
+        try:
+            __import__(import_name)
+        except ImportError:
+            missing.append(pip_name)
+
+    if missing:
+        print(f"\nThe following required packages are missing: {', '.join(missing)}")
+        choice = input("Do you want to install them now? (y/n): ").strip().lower()
+        if choice == 'y':
+            subprocess.check_call([sys.executable, "-m", "pip", "install", *missing])
+            print("\nAll missing packages installed successfully. Please rerun the script.")
+            sys.exit(0)
+        else:
+            print("\nCannot proceed without installing the required packages. Exiting...")
+            sys.exit(1)
 
 def objectives(trial):
     in_sample_size = 0.8
@@ -172,6 +203,7 @@ def run_backtest_from_optimized_params():
 
 
 def main_menu():
+    check_and_install_packages()
     while True:
         print("\n=== Trading Strategy Menu ===")
         print("1. Run Backtest")
