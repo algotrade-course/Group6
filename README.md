@@ -19,7 +19,7 @@ python -m venv envgroup6
 
 ### Step 4: Execute the environment
 ```bash
-source myenv/bin/activate
+source envgroup6/bin/activate
 ```
 
 ### Step 5: Execute the code
