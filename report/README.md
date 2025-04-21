@@ -178,15 +178,13 @@ For this backtest, the following fixed parameters were used:
 | Parameter         | Value | Description |
 |-------------------|-------|-------------|
 | `in_sample_size`  | 0.8   | 80% of the dataset is used for in-sample backtesting |
-| `period_bb`       | 21    | Window length for Bollinger Bands |
-| `period_rsi`      | 6     | Window length for RSI |
+| `period_bb`       | 24    | Window length for Bollinger Bands |
+| `period_rsi`      | 16    | Window length for RSI |
 | `risk_per_trade`  | 0.1   | 10% of available capital allocated to each trade |
-| `rsi_oversold`    | 5     | RSI threshold to detect oversold conditions |
-| `rsi_overbought`  | 71    | RSI threshold to detect overbought conditions |
-| `stop_loss`       | 0.3   | Trades are closed if a 30% loss is reached |
-| `take_profit`     | 0.25  | Trades are closed if a 25% gain is reached |
-
-These values were selected based on intuition and prior experience, and serve as the baseline configuration for testing.
+| `rsi_oversold`    | 13    | RSI threshold to detect oversold conditions |
+| `rsi_overbought`  | 90    | RSI threshold to detect overbought conditions |
+| `stop_loss`       | 0.15  | Trades are closed if a 15% loss is reached |
+| `take_profit`     | 0.1   | Trades are closed if a 10% gain is reached | 
 
 ---
 
@@ -229,11 +227,22 @@ The backtest will execute the strategy on the in-sample data, applying the defin
     - Take-profit: 25% gain
     - Opposing signal (e.g., if a long position is open and the RSI crosses above the overbought threshold)
 
-
-
 ### In-sample Backtesting Result
-- Brieftly shown the result: table, image, etc.
-- Has link to the In-sample Backtesting Report
+| Metric                  | Value                  |
+|-------------------------|------------------------|
+| Initial Capital         | 1,000,000,000          |
+| Final Capital           | 975,665,122.25         |
+| Total Return            | -2.43%                 |
+| Win Rate                | 55.56%                 |
+| Max Drawdown            | 2.77%                  |
+| Sharpe Ratio            | -0.1387                |
+| Number of Transactions  | 324                    |
+
+These results indicate that while the strategy was moderately successful in identifying profitable trades (with a **win rate above 50%**), it still resulted in an overall **net loss** during the in-sample period. The **Sharpe Ratio being negative** suggests that returns did not compensate for the volatility, meaning the strategy carried risk without consistent reward.
+
+Despite the negative return, the relatively low drawdown and decent trade count imply the system maintains **risk control**, though the entry and exit rules may require further tuning to improve profitability.
+
+These findings provide a baseline for comparison when evaluating **optimized parameters** and testing on **out-of-sample data**.
 
 ## Optimization
 - Describe the Optimization step
