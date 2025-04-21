@@ -100,109 +100,71 @@ def run_optimization(n_trials):
     if run_now == 'y':
         run_backtest_from_optimized_params()
 
-# Parameter for backtesting manually input
-in_sample_size = 0.8 # Percentage of data that used for the in sample test 
-period_bb = 24
-period_rsi = 16
-risk_per_trade = 0.1 # Percentage of total capital that used for each trade 
-rsi_oversold = 13
-rsi_overbought = 90
-stop_loss = 0.15
-take_profit = 0.1
+def run_backtest_no_fee():
+    result_path = os.path.join(os.getcwd(), "optimization_results.json")
+    
+    if not os.path.exists(result_path):
+        print("No set of parameters found. Please run optimization first to receive a set of parameters.")
+        return
 
-def run_backtesting():
-    print("\nRunning Backtest with Predefined Parameters...\n")
+    with open(result_path, "r") as f:
+        result = json.load(f)
 
-    # Ask user which dataset to use
-    print("Which dataset do you want to run the backtest on?")
-    print("1. In-sample data")
-    print("2. Out-of-sample data")
-    print("3. All data")
-    dataset_choice = input("Enter choice (1/2/3): ").strip()
+    params = result["best_params"]
 
-    in_sample_flag = False
-    out_sample_flag = False
-    all_sample_flag = False
+    while True:
+        print("\nWhich dataset do you want to run the backtest on?")
+        print("1. In-sample data")
+        print("2. Out-of-sample data")
+        print("3. All data")
+        print("0. Back to Main Menu")
+        dataset_choice = input("Enter choice (0/1/2/3): ").strip()
 
-    if dataset_choice == "1":
-        in_sample_flag = True
-    elif dataset_choice == "2":
-        out_sample_flag = True
-    elif dataset_choice == "3":
-        all_sample_flag = True
-    else:
-        print("Invalid choice. Defaulting to in-sample data.")
-        in_sample_flag = True
+        if dataset_choice == "0":
+            print("Returning to main menu...")
+            return
 
-    backtest = Backtesting(
-        period_rsi,
-        period_bb,
-        in_sample_size,
-        risk_per_trade,
-        rsi_oversold,
-        rsi_overbought,
-        stop_loss,
-        take_profit,
-    )
+        in_sample_flag = False
+        out_sample_flag = False
+        all_sample_flag = False
 
-    backtest.initiate_data(True)
-    backtest.apply_indicators()
-    backtest.run_backtest(
-        print_result=True,
-        all_sample=all_sample_flag,
-        out_sample=out_sample_flag
-    )
+        if dataset_choice == "1":
+            in_sample_flag = True
+        elif dataset_choice == "2":
+            out_sample_flag = True
+        elif dataset_choice == "3":
+            all_sample_flag = True
+        else:
+            print("Invalid choice. Please select a valid option.")
+            continue
 
-def run_backtesting_no_fee():
-    print("\nRunning Backtest with Predefined Parameters...\n")
+        backtest = Backtesting(
+            params["period_rsi"],
+            params["period_bb"],
+            0.8,  # in_sample_size for splitting
+            params["risk_per_trade"],
+            params["rsi_oversold"],
+            params["rsi_overbought"],
+            params["stop_loss"],
+            params["take_profit"],
+        )
 
-    # Ask user which dataset to use
-    print("Which dataset do you want to run the backtest on?")
-    print("1. In-sample data")
-    print("2. Out-of-sample data")
-    print("3. All data")
-    dataset_choice = input("Enter choice (1/2/3): ").strip()
+        backtest.initiate_data(True)
+        backtest.apply_indicators()
 
-    in_sample_flag = False
-    out_sample_flag = False
-    all_sample_flag = False
-
-    if dataset_choice == "1":
-        in_sample_flag = True
-    elif dataset_choice == "2":
-        out_sample_flag = True
-    elif dataset_choice == "3":
-        all_sample_flag = True
-    else:
-        print("Invalid choice. Defaulting to in-sample data.")
-        in_sample_flag = True
-
-    backtest = Backtesting(
-        period_rsi,
-        period_bb,
-        in_sample_size,
-        risk_per_trade,
-        rsi_oversold,
-        rsi_overbought,
-        stop_loss,
-        take_profit,
-    )
-
-    backtest.initiate_data(True)
-    backtest.apply_indicators()
-    backtest.run_backtest_no_fee(
-        print_result=True,
-        all_sample=all_sample_flag,
-        out_sample=out_sample_flag
-    )
-
+        backtest.run_backtest_no_fee(
+            print_result=True,
+            extract_data=True,
+            all_sample=all_sample_flag,
+            out_sample=out_sample_flag,
+        )
 
 
 def run_backtest_from_optimized_params():
     result_path = os.path.join(os.getcwd(), "optimization_results.json")
     
     if not os.path.exists(result_path):
-        print("No optimization_results.json found. Please run optimization first.")
+        print("No set of parameters found. Please run optimization first to receive a set of parameters.")
         return
 
     with open(result_path, "r") as f:
@@ -271,9 +233,9 @@ def main_menu():
         choice = input("Choose an option: ")
 
         if choice == "1":
-            run_backtesting()
+            run_backtest_from_optimized_params()
         elif choice == "2":
-            run_backtesting_no_fee()
+            run_backtest_no_fee()
         elif choice == "3":            
             try:
                 n = int(input("Enter number of optimization trials: "))
