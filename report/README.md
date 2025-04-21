@@ -244,12 +244,62 @@ Despite the negative return, the relatively low drawdown and decent trade count 
 
 These findings provide a baseline for comparison when evaluating **optimized parameters** and testing on **out-of-sample data**.
 
-## Optimization
-- Describe the Optimization step
-    - Optimization process/methods/library
-    - Parameters to optimize
-    - Hyper-parameter of the optimize process
-- Step 5 of the Nine-Step
+## 🧪 Optimization
+
+### Overview
+
+The optimization step is designed to automatically search for the best set of strategy parameters that yield the highest performance in terms of return. This is crucial for identifying configurations that outperform the baseline, especially when the strategy has multiple tunable components affecting entry, exit, and risk behavior.
+
+---
+
+### ⚙️ Optimization Process
+
+The strategy parameters are optimized using **Optuna**, an open-source hyperparameter optimization framework. Optuna employs an efficient sampling algorithm called **Tree-structured Parzen Estimator (TPE)**, which intelligently explores the parameter space by learning from previous trials. This method balances exploration and exploitation better than traditional grid or random search approaches.
+
+The optimization process is implemented in both `main.py` (interactive) and `optimize.py` (standalone). It follows these key steps:
+
+1. Define the objective function (`objectives`) that:
+   - Instantiates the `Backtesting` class with trial-specific parameters.
+   - Runs the backtest on the **in-sample dataset**.
+   - Returns the **total return** as the objective to maximize.
+2. Create an Optuna study with `direction="maximize"`.
+3. Run multiple trials to search for the best-performing configuration.
+
+---
+
+### 🎯 Parameters Optimized
+
+The following parameters are subject to optimization:
+
+| Parameter         | Range                          | Description |
+|-------------------|--------------------------------|-------------|
+| `period_bb`       | 20 to 30 (int)                 | Period of Bollinger Bands |
+| `period_rsi`      | 5 to 20 (int)                  | RSI window length |
+| `risk_per_trade`  | 0.1 to 0.5 (float, step 0.1)   | Capital risked per trade |
+| `rsi_oversold`    | 5 to 30 (float)                | RSI threshold to trigger long entry |
+| `rsi_overbought`  | 70 to 90 (float)               | RSI threshold to trigger short entry |
+| `stop_loss`       | 0.05 to 0.3 (float, step 0.05) | Max loss before closing a trade |
+| `take_profit`     | 0.05 to 0.3 (float, step 0.05) | Max gain before closing a trade |
+
+These values are sampled in each trial and passed into the `Backtesting` instance for evaluation.
+
+---
+
+### 🔧 Hyperparameters of the Optimization Process
+
+| Setting            | Value         | Description |
+|--------------------|---------------|-------------|
+| `n_trials`         | User-defined (e.g., 100 or 200) | Number of parameter combinations to test |
+| `direction`        | `"maximize"`  | Optimization goal (maximize return) |
+| `sampler`          | TPE Sampler   | Optuna's default sampler for efficient searching |
+| `return metric`    | Total Return  | Output used to evaluate each configuration |
+
+Example optimization execution from `main.py`:
+
+```bash
+python main.py
+# Select option 3 → Enter number of trials (e.g., 100 or 200)
+```
 ### Optimization Result
 - Brieftly shown the result: table, image, etc.
 - Has link to the Optimization Report
