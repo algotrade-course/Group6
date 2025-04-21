@@ -74,14 +74,92 @@ The data is initialized in the script via:
 backtest.initiate_data(use_csv=True)
 ```
 
-## Implementation
-- Briefly describe the implemetation.
-    - How to set up the enviroment to run the source code and required steps to replicate the results
-    - Discuss the concrete implementation if there are any essential details
-    - How to run each step from `In-sample Backtesting`, Step 4 to `Out-of-sample Backtesting`, Step 6 (or `Paper Trading`, Step 7).
-    - How to change the algorithm configurations for different run.
-- Most important section and need the most details to correctly replicate the results.
+## 🛠️ Implementation
 
+This section provides an in-depth overview of the system implementation, including environment setup, key modules, execution steps, and configuration options. The project is implemented in Python and follows a modular design that separates data handling, strategy logic, backtesting, and optimization.
+
+---
+
+### Overview of Implementation
+
+The core functionality is divided into the following components:
+
+- **`main.py`**: The entry point to the system with a menu interface to run backtesting or optimization.
+- **`backtesting.py`**: Contains the `Backtesting` class which implements the trading logic, indicator calculations, trade execution, and performance evaluation.
+- **`optimize.py`**: Uses the Optuna library to find optimal hyperparameters for the trading strategy.
+- **`README.md`**: Provides step-by-step instructions for setting up and executing the project.
+
+The system is built to support reproducibility and configurability through a consistent interface.
+
+---
+
+### Environment Setup
+
+To replicate the environment and run the code, follow these steps:
+
+```bash
+# Step 1: Clone the repository
+git clone https://github.com/algotrade-course/Group6.git
+cd Group6
+
+# Step 2: Create and activate a virtual environment
+python -m venv envgroup6
+source envgroup6/bin/activate  # On Windows: envgroup6\Scripts\activate
+
+# Step 3: Run the code (it checks and installs missing packages automatically)
+python main.py
+```
+Upon the first run, the script will check for required packages. If any are missing, the user is prompted to install them. After installation, the script should be re-run.
+### Code structure and key modules
+- **`backtesting.py`**: Contains the `Backtesting` class which implements the trading logic, indicator calculations, trade execution, and performance evaluation - Implements the main trading logic. Key features include:
+    - **Indicator Calculation**: Computes RSI and Bollinger Bands
+    - Signal generation based on indicator thresholds.
+    - Risk management via stop-loss and take-profit.
+    - Logging and export of trade data.
+    - Visualization of returns and price data.
+- **`main.py`**: The entry point to the system with a menu interface to run backtesting or optimization. Offers a CLI with options to:
+    - Run in-sample backtesting.
+    - Run backtesting without or with trading fee.
+    - Run hyperparameter optimization.
+    - Load optimized parameters and rerun the best strategy.
+- **`optimize.py`**: Uses the Optuna library to find optimal hyperparameters for the trading strategy - Uses the Optuna framework to run a parameter search over:
+    - `period_bb`: Period for Bollinger Bands
+    - `period_rsi`: Period for RSI
+    - `risk_per_trade`: Risk percentage per trade
+    - `rsi_oversold`: RSI threshold for oversold condition
+    - `rsi_overbought`: RSI threshold for overbought condition
+    - `stop_loss`: Stop-loss percentage
+    - `take_profit`: Take-profit percentage
+### Execution Flow:
+#### In-sample Backtesting:
+To run the backtest using predefined parameters:
+```bash
+python main.py
+# Then select option 1 or 2 from the menu (with or without trading fee)
+```
+This run backtesting on the in-sample portion (80% of the data) and generates a report.
+#### Optimization:
+To run the optimization by Optuna:
+```bash
+python main.py
+# Then select option 3 from the menu
+# Then enter the number of trials (e.g., 200)
+```
+This will run the optimization process and save the best parameters in optimization_result.json.
+#### Out-of-sample Backtesting:
+To run the backtest using the optimized parameters:
+```bash
+python main.py
+# Select option 3 to optimize → after it finishes, choose to run the backtest
+# Choose one of the following:
+# 1 → In-sample
+# 2 → Out-of-sample
+# 3 → All data
+```
+The script loads parameters from optimization_results.json and runs backtest accordingly.
+
+#### Configuration and Customization:
+You can customize the strategy directly by editing the main.py or using the menu.
 ## In-sample Backtesting
 - Describe the In-sample Backtesting step
     - Parameters
