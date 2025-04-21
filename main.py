@@ -11,7 +11,8 @@ required_packages = {
     "mplfinance": "mplfinance",
     "plotly": "plotly",
     "psycopg2": "psycopg2-binary",  # correct import name -> pip install name
-    "optuna": "optuna"
+    "optuna": "optuna",
+    "kaleido": "kaleido"
 }
 
 def check_and_install_packages():
