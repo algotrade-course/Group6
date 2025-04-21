@@ -99,18 +99,39 @@ def run_optimization(n_trials):
     if run_now == 'y':
         run_backtest_from_optimized_params()
 
+# Parameter for backtesting manually input
+in_sample_size = 0.8 # Percentage of data that used for the in sample test 
+period_bb = 21
+period_rsi = 6
+risk_per_trade = 0.1 # Percentage of total capital that used for each trade 
+rsi_oversold = 5
+rsi_overbought = 71
+stop_loss = 0.3
+take_profit = 0.25
 
 def run_backtesting():
     print("\nRunning Backtest with Predefined Parameters...\n")
-    
-    in_sample_size = 0.8 # Percentage of data that used for the in sample test 
-    period_bb = 21
-    period_rsi = 6
-    risk_per_trade = 0.1 # Percentage of total capital that used for each trade 
-    rsi_oversold = 5
-    rsi_overbought = 71
-    stop_loss = 0.3
-    take_profit = 0.25
+
+    # Ask user which dataset to use
+    print("Which dataset do you want to run the backtest on?")
+    print("1. In-sample data")
+    print("2. Out-of-sample data")
+    print("3. All data")
+    dataset_choice = input("Enter choice (1/2/3): ").strip()
+
+    in_sample_flag = False
+    out_sample_flag = False
+    all_sample_flag = False
+
+    if dataset_choice == "1":
+        in_sample_flag = True
+    elif dataset_choice == "2":
+        out_sample_flag = True
+    elif dataset_choice == "3":
+        all_sample_flag = True
+    else:
+        print("Invalid choice. Defaulting to in-sample data.")
+        in_sample_flag = True
 
     backtest = Backtesting(
         period_rsi,
@@ -125,19 +146,35 @@ def run_backtesting():
 
     backtest.initiate_data(True)
     backtest.apply_indicators()
-    backtest.run_backtest(print_result=True)
+    backtest.run_backtest(
+        print_result=True,
+        all_sample=all_sample_flag,
+        out_sample=out_sample_flag
+    )
 
-def run_backtesting_no_fee():
+def run_backtesting():
     print("\nRunning Backtest with Predefined Parameters...\n")
-    
-    in_sample_size = 0.8 # Percentage of data that used for the in sample test 
-    period_bb = 21
-    period_rsi = 6
-    risk_per_trade = 0.1 # Percentage of total capital that used for each trade 
-    rsi_oversold = 5
-    rsi_overbought = 71
-    stop_loss = 0.3
-    take_profit = 0.25
+
+    # Ask user which dataset to use
+    print("Which dataset do you want to run the backtest on?")
+    print("1. In-sample data")
+    print("2. Out-of-sample data")
+    print("3. All data")
+    dataset_choice = input("Enter choice (1/2/3): ").strip()
+
+    in_sample_flag = False
+    out_sample_flag = False
+    all_sample_flag = False
+
+    if dataset_choice == "1":
+        in_sample_flag = True
+    elif dataset_choice == "2":
+        out_sample_flag = True
+    elif dataset_choice == "3":
+        all_sample_flag = True
+    else:
+        print("Invalid choice. Defaulting to in-sample data.")
+        in_sample_flag = True
 
     backtest = Backtesting(
         period_rsi,
@@ -152,7 +189,12 @@ def run_backtesting_no_fee():
 
     backtest.initiate_data(True)
     backtest.apply_indicators()
-    backtest.run_backtest_no_fee(print_result=True)
+    backtest.run_backtest(
+        print_result=True,
+        all_sample=all_sample_flag,
+        out_sample=out_sample_flag
+    )
+
 
 def run_backtest_from_optimized_params():
     result_path = os.path.join(os.getcwd(), "optimization_results.json")
