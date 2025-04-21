@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import pprint
 import mplfinance as mpf
+import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 import plotly.express as px
 import plotly.subplots as sp
@@ -233,6 +234,9 @@ class Backtesting:
 
         fig.show()
 
+    
+
+
     def plot_returns(self, capital_map, output_file="returns.png"):
         if capital_map is None or not capital_map:
             print("No capital data available. Cannot plot returns.")
@@ -240,42 +244,27 @@ class Backtesting:
 
         # Convert dictionary to DataFrame
         capital_df = pd.DataFrame(list(capital_map.items()), columns=["date", "capital"])
-
-        # Convert date column to datetime format
         capital_df["date"] = pd.to_datetime(capital_df["date"])
 
-        # Create a line chart using Plotly
-        fig = go.Figure()
+        # Plot using matplotlib
+        plt.figure(figsize=(12, 6))
+        plt.plot(capital_df["date"], capital_df["capital"], color="blue", linewidth=2)
+        plt.title("Portfolio Capital Over Time")
+        plt.xlabel("Date")
+        plt.ylabel("Capital (VND)")
+        plt.grid(True)
 
-        fig.add_trace(
-            go.Scatter(
-                x=capital_df["date"],
-                y=capital_df["capital"],
-                mode="lines",
-                line=dict(color="blue", width=2),
-                text=[f"{cap:.2f}" for cap in capital_df["capital"]],
-                textposition="top center",
-            )
-        )
+        # Show in a pop-up window
+        plt.tight_layout()
+        plt.show()
 
-        # Update layout
-        fig.update_layout(
-            title="Portfolio Capital Over Time",
-            xaxis_title="Date",
-            yaxis_title="Capital (VND)",
-            xaxis=dict(type="date"),
-            showlegend=False,
-        )
-
-        # Show the figure
-        fig.show()
-
-        # Save the figure as PNG
+        # Save as PNG
         try:
-            fig.write_image(output_file, width=1200, height=600)
+            plt.savefig(output_file)
             print(f"Return plot saved to {output_file}")
         except Exception as e:
-            print("Error saving image. Make sure kaleido is installed:", e)
+            print("Error saving image:", e)
+
 
 
     def extract_trades(self, data_test, capital=1000000000, risk_per_trade=None, fee_add=0.47):
