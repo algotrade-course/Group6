@@ -125,11 +125,12 @@ Upon the first run, the script will check for required packages. If any are miss
 - **`optimize.py`**: Uses the Optuna library to find optimal hyperparameters for the trading strategy - Uses the Optuna framework to run a parameter search over:
     - `period_bb`: Period for Bollinger Bands
     - `period_rsi`: Period for RSI
-    - `risk_per_trade`: Risk percentage per trade
+    - `risk_per_trade`: Risk percentage per trade - total capital used for each trade
     - `rsi_oversold`: RSI threshold for oversold condition
     - `rsi_overbought`: RSI threshold for overbought condition
     - `stop_loss`: Stop-loss percentage
     - `take_profit`: Take-profit percentage
+- **`evaluator.py`** : calculate indicators such as RSI and Bollinger Bands, including additional metrics for performance evaluation like Sharpe ratio, maximum drawdown, and win rate.
 ### Execution Flow:
 #### In-sample Backtesting:
 To run the backtest using predefined parameters:
