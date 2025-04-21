@@ -300,31 +300,104 @@ Example optimization execution from `main.py`:
 python main.py
 # Select option 3 → Enter number of trials (e.g., 100 or 200)
 ```
+
+At the end of the process, Users are prompted to immediately re-run the backtest using the optimal parameters on in-sample, out-of-sample, or full dataset.
 ### Optimization Result
-- Brieftly shown the result: table, image, etc.
-- Has link to the Optimization Report
+- The optimization process yields the following best parameters - which we mentioned above:
+| Parameter         | Value | Description |
+|-------------------|-------|-------------|
+| `in_sample_size`  | 0.8   | 80% of the dataset is used for in-sample backtesting |
+| `period_bb`       | 24    | Window length for Bollinger Bands |
+| `period_rsi`      | 16    | Window length for RSI |
+| `risk_per_trade`  | 0.1   | 10% of available capital allocated to each trade |
+| `rsi_oversold`    | 13    | RSI threshold to detect oversold conditions |
+| `rsi_overbought`  | 90    | RSI threshold to detect overbought conditions |
+| `stop_loss`       | 0.15  | Trades are closed if a 15% loss is reached |
+| `take_profit`     | 0.1   | Trades are closed if a 10% gain is reached | 
 
-## Out-of-sample Backtesting
-- Describe the Out-of-sample Backtesting step
-    - Parameter
-    - Data
-- Step 6 of th Nine-Step
-### Out-of-sample Backtesting Reuslt
-- Brieftly shown the result: table, image, etc.
-- Has link to the Out-of-sample Backtesting Report
-
-## Paper Trading
-- Describe the Paper Trading step
-- Step 7 of the Nine-Step
-- Optional
-### Optimization Result
-- Brieftly shown the result: table, image, etc.
-- Has link to the Paper Trading Report
+---
 
 
-## Conclusion
-- What is the conclusion?
-- Optional
+## Out-of-Sample Backtesting
+
+### Overview
+
+After identifying the best-performing parameters through in-sample backtesting and optimization, the next critical step is **out-of-sample backtesting**. This process evaluates the strategy's generalization ability by testing it on a **previously unseen portion of the data**.
+
+In this project, 20% of the dataset is reserved as out-of-sample data. This segment is not used in any part of the optimization or training process, ensuring that the results reflect real-world performance more reliably.
+
+---
+
+### How It Works
+
+Once optimization is complete, the user is prompted with the option to run the best parameters on:
+- **In-sample data**
+- **Out-of-sample data**
+- **All data**
+
+This interaction is handled via:
+
+```python
+run_backtest_from_optimized_params()
+```
+Which internally loads optimization_results.json and passes the best configuration to the Backtesting class. Then, based on user selection, it runs:
+```python
+backtest.run_backtest(
+    print_result=True,
+    all_sample=all_sample_flag,
+    out_sample=out_sample_flag
+)
+```
+This function executes the backtest on the selected dataset, applying the optimized parameters and logging trades. The results are then displayed in a similar format to the in-sample backtest.
+### Purpose and Value
+The out-of-sample backtesting serves several purposes:
+- **Detect overfitting**: Parameters that perform well in-sample may exploit noise in the data.
+- **Assess robustness**: If the strategy maintains consistent or improved performance, it shows promise for real-time application.
+- **Validate optimization**: Good out-of-sample performance indicates the optimizer found a genuinely effective parameter set.
+### Execution Steps
+To run the out-of-sample backtest using the optimized parameters:
+1. Start the script:
+```bash
+python main.py
+```
+2. Select option 3 from the menu to optimize (or skip this step if already done).
+3. After optimization, choose to run the backtest.
+4. Select option 2 for out-of-sample backtesting.
+5. The script will execute the backtest on the out-of-sample data and display the results.
+### Results Handling
+- All trade logs, performance metrics, and capital growth plots are generated as part of the backtest. If enabled, trade records can be exported as:
+    - `data_out_sample.csv` for out-of-sample data
+    - `trades_output.csv` for trade logs
+
+### Out-of-sample Backtesting Result
+| Metric                  | Value                |
+|-------------------------|----------------------|
+| Final Capital           | 986,925,228.18       |
+| Total Return            | -1.31%               |
+| Win Rate                | 50.55%               |
+| Max Drawdown            | 1.39%                |
+| Sharpe Ratio            | -0.3119              |
+| Number of Transactions  | 91                   |
+
+#### 🔍 Interpretation
+
+The out-of-sample results demonstrate a **mild negative return** of -1.31%, which, although better than the in-sample performance (-2.43%), still indicates the strategy did not generate consistent profitability on unseen data.
+
+Some key insights:
+
+- The **win rate (~50.5%)** suggests that the strategy was correct slightly more than half of the time, showing that trade direction predictions were not purely random.
+- **Low drawdown (1.39%)** indicates **strong risk control**, meaning losses were contained even when profits were limited.
+- The **Sharpe ratio is negative**, reflecting that returns did not justify the volatility taken on during the period.
+- A relatively low number of trades (91) implies **lower market activity** or **stricter entry conditions** in the out-of-sample dataset.
+
+#### 📌 Conclusion
+
+While the strategy showed some consistency between in-sample and out-of-sample behavior in terms of win rate and drawdown, it failed to generate a positive return in both cases. This suggests the need for:
+- Further tuning of risk-reward thresholds.
+- Refinement of signal conditions.
+- Possibly introducing additional filters (e.g., trend confirmation, volume) or ensemble approaches to increase robustness.
+
+The out-of-sample test confirms that the strategy is **not severely overfitted**, but also **not yet profitable**, making it a stable yet underperforming baseline for future iterations.
 
 ## Reference
 - All the reference goes here.
