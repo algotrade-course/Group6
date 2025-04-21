@@ -29,12 +29,10 @@ def objectives(trial):
     backtest.initiate_data(True)
     backtest.apply_indicators()
 
-    sharpe_ratio = backtest.run_backtest(returns_sharp=True, print_result=False)
-
-    if sharpe_ratio is None or np.isnan(sharpe_ratio):
+    total_return = backtest.run_backtest(returns_total_return=True)
+    if total_return is None or np.isnan(total_return):
         return float("-inf")
-    
-    return sharpe_ratio
+    return total_return
 
 if __name__ == "__main__":
     study = optuna.create_study(direction="maximize")
@@ -42,4 +40,4 @@ if __name__ == "__main__":
 
     print("Best hyperparameters:")
     print(study.best_params)
-    print(f"Best Sharpe Ratio: {study.best_value}")
+    print(f"Best Returns: {study.best_value}")

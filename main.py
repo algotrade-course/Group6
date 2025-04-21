@@ -1,19 +1,54 @@
-import optuna
+import sys
+import subprocess  # Add this import
 import warnings
+import os
+import json
+
+# Mapping of import names to pip install names
+required_packages = {
+    "pandas": "pandas",
+    "numpy": "numpy",
+    "mplfinance": "mplfinance",
+    "plotly": "plotly",
+    "psycopg2": "psycopg2-binary",  # correct import name -> pip install name
+    "optuna": "optuna"
+}
+
+def check_and_install_packages():
+    missing = []
+    for import_name, pip_name in required_packages.items():
+        try:
+            __import__(import_name)
+        except ImportError:
+            missing.append(pip_name)
+
+    if missing:
+        print(f"\nThe following required packages are missing: {', '.join(missing)}")
+        choice = input("Do you want to install them now? (y/n): ").strip().lower()
+        if choice == 'y':
+            subprocess.check_call([sys.executable, "-m", "pip", "install", *missing])
+            print("\nAll missing packages installed successfully. Please rerun the script.")
+            sys.exit(0)
+        else:
+            print("\nCannot proceed without installing the required packages. Exiting...")
+            sys.exit(1)
+
+check_and_install_packages()
+
+import optuna
 from backtesting.backtesting import Backtesting
 import numpy as np
-import json
-import os
+
 
 warnings.filterwarnings("ignore")
 
 def objectives(trial):
     in_sample_size = 0.8
-    period_bb = trial.suggest_int("period_bb", 20, 40, step=1)
+    period_bb = trial.suggest_int("period_bb", 20, 30, step=1)
     period_rsi = trial.suggest_int("period_rsi", 5, 20, step=1)
     risk_per_trade = trial.suggest_float("risk_per_trade", 0.1, 0.5, step=0.1)
     rsi_oversold = trial.suggest_float("rsi_oversold", 5, 30, step=1)
-    rsi_overbought = trial.suggest_float("rsi_overbought", 70, 95, step=1)
+    rsi_overbought = trial.suggest_float("rsi_overbought", 70, 90, step=1)
     stop_loss = trial.suggest_float("stop_loss", 0.05, 0.3, step=0.05)
     take_profit = trial.suggest_float("take_profit", 0.05, 0.3, step=0.05)
 
@@ -30,12 +65,11 @@ def objectives(trial):
 
     backtest.initiate_data(True)
     backtest.apply_indicators()
-    sharpe_ratio = backtest.run_backtest(returns_sharp=True, print_result=False)
 
-    if sharpe_ratio is None or np.isnan(sharpe_ratio):
+    total_return = backtest.run_backtest(returns_total_return=True)
+    if total_return is None or np.isnan(total_return):
         return float("-inf")
-    return sharpe_ratio
-
+    return total_return
 
 def run_optimization(n_trials):
     print("\nStarting Hyperparameter Optimization...\n")
@@ -46,11 +80,11 @@ def run_optimization(n_trials):
     print("Best Hyperparameters:")
     for k, v in study.best_params.items():
         print(f"{k}: {v}")
-    print(f"Best Sharpe Ratio: {study.best_value:.6f}")
+    print(f"Best Returns: {study.best_value:.6f}")
 
     result = {
         "best_params": study.best_params,
-        "best_sharpe_ratio": study.best_value,
+        "best_returns": study.best_value,
     }
 
     # Define file path
@@ -61,6 +95,9 @@ def run_optimization(n_trials):
         json.dump(result, f, indent=4)
 
     print(f"\nResults saved to: {result_path}")
+    run_now = input("\nDo you want to run backtest with best parameters now? (y/n): ").lower()
+    if run_now == 'y':
+        run_backtest_from_optimized_params()
 
 
 def run_backtesting():
@@ -117,6 +154,62 @@ def run_backtesting_no_fee():
     backtest.apply_indicators()
     backtest.run_backtest_no_fee(print_result=True)
 
+def run_backtest_from_optimized_params():
+    result_path = os.path.join(os.getcwd(), "optimization_results.json")
+    
+    if not os.path.exists(result_path):
+        print("No optimization_results.json found. Please run optimization first.")
+        return
+
+    with open(result_path, "r") as f:
+        result = json.load(f)
+
+    params = result["best_params"]
+
+    # Ask user which dataset to use
+    print("\nWhich dataset do you want to run the backtest on?")
+    print("1. In-sample data")
+    print("2. Out-of-sample data")
+    print("3. All data")
+    dataset_choice = input("Enter choice (1/2/3): ").strip()
+
+    in_sample_flag = False
+    out_sample_flag = False
+    all_sample_flag = False
+
+    if dataset_choice == "1":
+        in_sample_flag = True
+    elif dataset_choice == "2":
+        out_sample_flag = True
+    elif dataset_choice == "3":
+        all_sample_flag = True
+    else:
+        print("Invalid choice. Defaulting to in-sample data.")
+        in_sample_flag = True
+
+    backtest = Backtesting(
+        params["period_rsi"],
+        params["period_bb"],
+        0.8,  # in_sample_size for splitting
+        params["risk_per_trade"],
+        params["rsi_oversold"],
+        params["rsi_overbought"],
+        params["stop_loss"],
+        params["take_profit"],
+    )
+
+    backtest.initiate_data(True)
+    backtest.apply_indicators()
+    
+    backtest.run_backtest(
+        print_result=True,
+        all_sample=all_sample_flag,
+        out_sample=out_sample_flag
+    )
+
+
+
+
 def main_menu():
     while True:
         print("\n=== Trading Strategy Menu ===")
@@ -141,6 +234,7 @@ def main_menu():
             break
         else:
             print("Invalid choice. Please select 1, 2, or 3.")
+
 
 if __name__ == "__main__":
     main_menu()

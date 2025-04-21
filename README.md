@@ -12,51 +12,55 @@ git clone https://github.com/algotrade-course/Group6.git
 cd Group6
 ```
 
-### Step 3: Install the Required Packages
+### Step 3: Create the new environment
 ```bash
-pip install pandas
-pip install mplfinance
-pip install plotly
-pip install psycopg2-binary
-pip install optuna
+python -m venv envgroup6
 ```
 
-### Step 4: Execute the Code
+### Step 4: Execute the environment
 ```bash
+source envgroup6/bin/activate
+```
+
+### Step 5: Execute the code
+```
 python main.py
 ```
-
-### Step 5: Choose an Option
+After executing this command, if the environment lacks some packages for compiling, there would be an annoucement
 ```
-1. Run Backtest  
-2. Run Backtest without fee  
-3. Optimize Strategy
+The following required packages are missing: pandas, numpy, mplfinance, plotly, psycopg2-binary, optuna
+Do you want to install them now? (y/n):
 ```
+Click y to install. Then re-execute the code 
 
 ## Optimization
 ### Parameters
-The following results were generated using Optuna libary after 100 trials with the following parameters: 
+The following results were generated using Optuna libary after 200 trials with the following parameters: 
 ```
-    period_bb = trial.suggest_int("period_bb", 20, 40, step=1)
+    period_bb = trial.suggest_int("period_bb", 20, 30, step=1)
     period_rsi = trial.suggest_int("period_rsi", 5, 20, step=1)
     risk_per_trade = trial.suggest_float("risk_per_trade", 0.1, 0.5, step=0.1)
     rsi_oversold = trial.suggest_float("rsi_oversold", 5, 30, step=1)
-    rsi_overbought = trial.suggest_float("rsi_overbought", 70, 95, step=1)
+    rsi_overbought = trial.suggest_float("rsi_overbought", 70, 90, step=1)
     stop_loss = trial.suggest_float("stop_loss", 0.05, 0.3, step=0.05)
     take_profit = trial.suggest_float("take_profit", 0.05, 0.3, step=0.05)
 
 ```
 
-The sample size for in sample data with 80% of the full data. The optimization was executed to receive the highest sharpe ratio.
-```
-    study = optuna.create_study(direction="maximize")
-    study.optimize(objectives, n_trials=100)
-    print(f"Best Sharpe Ratio: {study.best_value:.6f}")
-
-```
+The sample size for in sample data with 80% of the full data. The optimization was executed to receive the highest returns with the number of trades at least 300 trades.
 
 
 ### Result
-Current 
-
-
+Recently, the set of parameters which results in the highest returns in in-sample data set is 
+```
+--- Optimization Complete ---
+Best Hyperparameters:
+period_bb: 23
+period_rsi: 20
+risk_per_trade: 0.1
+rsi_oversold: 15.0
+rsi_overbought: 86.0
+stop_loss: 0.1
+take_profit: 0.1
+Best Returns: -2.767913
+```
