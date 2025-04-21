@@ -62,6 +62,7 @@ After indicators are calculated, additional fields are appended, such as:
 ### Data Period
 
 The exact time span of the dataset can vary based on the CSV file used. From the file structure and example plots in the code, the data spans several months of **minute-level trading data**. This granular data is suitable for high-frequency or short-horizon strategy evaluation.
+At the moment we write this report, the dataset contains data from **2021-01-15** to **2025-03-20**.
 
 ---
 
