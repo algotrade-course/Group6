@@ -82,7 +82,7 @@ class Backtesting:
         self.data_in_sample.to_csv("data_in_sample.csv", index=False)
         self.data_out_sample.to_csv("data_out_sample.csv", index=False)
 
-    def plot_candlestick_chart(self):
+    def plot_candlestick_chart(self, output_file="all_sample_data.png"):
         if self.data is None or self.data.empty:
             print("No data available for plotting.")
             return
@@ -91,31 +91,40 @@ class Backtesting:
         self.data["date"] = pd.to_datetime(self.data["date"])
         self.data.set_index("date", inplace=True)
 
-        mc = mpf.make_marketcolors(
-            up="green",
-            down="red",  # Up (bullish) = Green, Down (bearish) = Red
-            edge="inherit",  # Make candlestick edges match body color
-            wick="inherit",  # Make wicks match candlestick body color
-            volume="inherit",  # Optional: Match volume bars
-        )
-
-        s = mpf.make_mpf_style(marketcolors=mc, gridcolor="gray")
-
         # Convert price columns to float
         price_columns = ["open", "high", "low", "close"]
         self.data[price_columns] = self.data[price_columns].astype(float)
 
-        # Plot candlestick chart (minute-level data)
-        mpf.plot(
-            self.data.iloc[211029:228328],
-            type="candle",
-            title="VN30F1M Candlestick Chart (Minute Data)",
-            style=s,
-            figsize=(15, 10),
-            warn_too_much_data=100000,  # Increase limit if needed
-            ylim=(self.data["low"].min() - 10, self.data["high"].max() + 10),
-            datetime_format="%Y-%m-%d %H:%M",
+        # Extract 80% of the data
+        total_rows = len(self.data)
+        rows_to_plot = int(total_rows * 1)
+        data_to_plot = self.data.iloc[:rows_to_plot]
+
+        # Create market colors and style
+        mc = mpf.make_marketcolors(
+            up="green",
+            down="red",
+            edge="inherit",
+            wick="inherit",
+            volume="inherit",
         )
+        s = mpf.make_mpf_style(marketcolors=mc, gridcolor="gray")
+
+        # Plot and save to PNG
+        mpf.plot(
+            data_to_plot,
+            type="candle",
+            title="VN30F1M Candlestick Chart (Sample Data)",
+            style=s,
+            figsize=(50, 10),
+            warn_too_much_data=200000,
+            ylim=(data_to_plot["low"].min() - 10, data_to_plot["high"].max() + 10),
+            datetime_format="%Y-%m-%d %H:%M",
+            savefig=dict(fname=output_file, dpi=150, bbox_inches="tight"),
+        )
+
+        print(f"Candlestick chart saved to {output_file}")
+
 
     def plot_chart(self):
         if self.data is None or self.data.empty:
@@ -485,7 +494,7 @@ if __name__ == "__main__":
     # Apply indicators (RSI, Bollinger Bands, SMA)
     backtest.apply_indicators()
 
-    backtest.run_backtest_no_fee(print_result=print_result)
+    #backtest.run_backtest_no_fee(print_result=print_result)
 
     # Run plot chart (Still have some problem related to connection)
-    # backtest.plot_candlestick_chart()
+    backtest.plot_candlestick_chart()
