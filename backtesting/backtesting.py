@@ -448,9 +448,17 @@ class Backtesting:
             return self.total_return
 
     
-    def run_backtest_no_fee(self, extract_data = False, returns_sharp = False, print_result=False):
+    def run_backtest_no_fee(self, extract_data = False, returns_sharp = False, print_result=False, all_sample = False, out_sample = False):
         self.split_data(self.in_sample_size, print_result=print_result)
-        self.backtest_strategy(self.data_in_sample, print_result=print_result, fee_add=0)
+        if all_sample:
+            print("Executing on all sample data...")
+            self.backtest_strategy(self.data, print_result=print_result, fee_add=0)
+        elif out_sample:
+            print("Executing on out sample data...")
+            self.backtest_strategy(self.data_out_sample, print_result=print_result, fee_add=0)
+        else:
+            print("Executing on in sample data...")
+            self.backtest_strategy(self.data_in_sample, print_result=print_result,fee_add=0)
 
         if extract_data:
             trades = self.extract_trades(self.data)
