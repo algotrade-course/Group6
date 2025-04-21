@@ -24,8 +24,8 @@ def check_and_install_packages():
             missing.append(pip_name)
 
     if missing:
-        print(f"\nThe following required packages are missing: {', '.join(missing)}")
-        choice = input("Do you want to install them now? (y/n): ").strip().lower()
+        print(f"\nPackages are missing: {', '.join(missing)}")
+        choice = input("Do you want to install these packages? (y/n): ").strip().lower()
         if choice == 'y':
             subprocess.check_call([sys.executable, "-m", "pip", "install", *missing])
             print("\nAll missing packages installed successfully. Please rerun the script.")
