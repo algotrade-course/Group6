@@ -55,12 +55,34 @@ Recently, the set of parameters which results in the highest returns in in-sampl
 ```
 --- Optimization Complete ---
 Best Hyperparameters:
-period_bb: 23
-period_rsi: 20
+period_bb: 24
+period_rsi: 16
 risk_per_trade: 0.1
-rsi_oversold: 15.0
-rsi_overbought: 86.0
-stop_loss: 0.1
+rsi_oversold: 13.0
+rsi_overbought: 90.0
+stop_loss: 0.15
 take_profit: 0.1
-Best Returns: -2.767913
+Best Returns: -2.433488
+```
+
+Use the above parameters for in sample data
+```
+--- Result for in-sample data ---
+Final Capital: 975665122.25 points
+Total Return: -2.43%
+Win Rate: 55.56%
+Max Drawdown: 2.769889%
+Sharpe Ratio: -0.138689
+Number of Transactions: 324
+```
+
+Use the above parameters for out-sample data
+```
+--- Result for out-sample data ---
+Final Capital: 986925228.18 points
+Total Return: -1.31%
+Win Rate: 50.55%
+Max Drawdown: 1.393816%
+Sharpe Ratio: -0.311865
+Number of Transactions: 91
 ```

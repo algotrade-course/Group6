@@ -101,13 +101,13 @@ def run_optimization(n_trials):
 
 # Parameter for backtesting manually input
 in_sample_size = 0.8 # Percentage of data that used for the in sample test 
-period_bb = 21
-period_rsi = 6
+period_bb = 24
+period_rsi = 16
 risk_per_trade = 0.1 # Percentage of total capital that used for each trade 
-rsi_oversold = 5
-rsi_overbought = 71
-stop_loss = 0.3
-take_profit = 0.25
+rsi_oversold = 13
+rsi_overbought = 90
+stop_loss = 0.15
+take_profit = 0.1
 
 def run_backtesting():
     print("\nRunning Backtest with Predefined Parameters...\n")
@@ -251,6 +251,7 @@ def run_backtest_from_optimized_params():
 
         backtest.run_backtest(
             print_result=True,
+            extract_data=True,
             all_sample=all_sample_flag,
             out_sample=out_sample_flag
         )
