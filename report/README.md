@@ -162,10 +162,75 @@ The script loads parameters from optimization_results.json and runs backtest acc
 #### Configuration and Customization:
 You can customize the strategy directly by editing the main.py or using the menu.
 ## In-sample Backtesting
-- Describe the In-sample Backtesting step
-    - Parameters
-    - Data
-- Step 4 of the Nine-Step
+
+### Overview
+
+The **in-sample backtesting** phase evaluates the performance of the trading strategy using a subset of historical data that the model has been trained or optimized on. This step helps validate whether the strategy's logic and parameters can generate favorable results under known market conditions.
+
+In this project, 80% of the entire dataset is designated as the **in-sample data**, with the remaining 20% reserved for out-of-sample evaluation. This proportion is controlled via the `in_sample_size` parameter.
+
+---
+
+### Parameters
+
+For this backtest, the following fixed parameters were used:
+
+| Parameter         | Value | Description |
+|-------------------|-------|-------------|
+| `in_sample_size`  | 0.8   | 80% of the dataset is used for in-sample backtesting |
+| `period_bb`       | 21    | Window length for Bollinger Bands |
+| `period_rsi`      | 6     | Window length for RSI |
+| `risk_per_trade`  | 0.1   | 10% of available capital allocated to each trade |
+| `rsi_oversold`    | 5     | RSI threshold to detect oversold conditions |
+| `rsi_overbought`  | 71    | RSI threshold to detect overbought conditions |
+| `stop_loss`       | 0.3   | Trades are closed if a 30% loss is reached |
+| `take_profit`     | 0.25  | Trades are closed if a 25% gain is reached |
+
+These values were selected based on intuition and prior experience, and serve as the baseline configuration for testing.
+
+---
+
+### Data
+
+The in-sample backtesting uses the first 80% of the full minute-level price data from the `daily_data.csv` file. This data includes:
+
+- **Timestamped price series**: `open`, `high`, `low`, `close`, `volume`
+- **Computed technical indicators**:
+  - `RSI` (Relative Strength Index) with a period of 6
+  - `Bollinger Bands` (upper and lower) with a period of 21 and 2 standard deviations
+
+The data is preprocessed using the `Backtesting.apply_indicators()` function, and the in-sample subset is saved to `data_in_sample.csv` after splitting.
+
+---
+
+### Backtesting Execution
+
+To run the in-sample backtest:
+
+```bash
+python main.py
+# Choose option 1 from the menu: Run Backtest (with trading fee)
+# or option 2: Run Backtest (without trading fee)
+```
+The backtest will execute the strategy on the in-sample data, applying the defined parameters and logging trades. This run the following methods:
+- `backtest.run_backtest(print_result=True)`
+    - Splits the dataset into 80% in-sample and 20% out-of-sample
+    - Applies the trading strategy
+    - Tracks capital over time, trade entries/exits, and overall performance metrics
+#### Logic Recap: 
+- The strategy enters a long position when:
+    - RSI is below the oversold threshold (5)
+    - Price touches the lower Bollinger Band
+- The strategy enters a short position when:
+    - RSI is above the overbought threshold (71)
+    - Price touches the upper Bollinger Band
+- Positions are closed based on:
+    - Stop-loss: 30% loss
+    - Take-profit: 25% gain
+    - Opposing signal (e.g., if a long position is open and the RSI crosses above the overbought threshold)
+
+
+
 ### In-sample Backtesting Result
 - Brieftly shown the result: table, image, etc.
 - Has link to the In-sample Backtesting Report
