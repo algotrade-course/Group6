@@ -152,7 +152,7 @@ def run_backtesting():
         out_sample=out_sample_flag
     )
 
-def run_backtesting():
+def run_backtesting_no_fee():
     print("\nRunning Backtest with Predefined Parameters...\n")
 
     # Ask user which dataset to use
@@ -189,11 +189,12 @@ def run_backtesting():
 
     backtest.initiate_data(True)
     backtest.apply_indicators()
-    backtest.run_backtest(
+    backtest.run_backtest_no_fee(
         print_result=True,
         all_sample=all_sample_flag,
         out_sample=out_sample_flag
     )
+
 
 
 def run_backtest_from_optimized_params():
