@@ -233,7 +233,7 @@ class Backtesting:
 
         fig.show()
 
-    def plot_returns(self, capital_map):
+    def plot_returns(self, capital_map, output_file="returns.png"):
         if capital_map is None or not capital_map:
             print("No capital data available. Cannot plot returns.")
             return
@@ -258,7 +258,7 @@ class Backtesting:
             )
         )
 
-        # Update layout for better visualization
+        # Update layout
         fig.update_layout(
             title="Portfolio Capital Over Time",
             xaxis_title="Date",
@@ -267,51 +267,56 @@ class Backtesting:
             showlegend=False,
         )
 
+        # Show the figure
         fig.show()
 
-    def extract_trades(self, data_test, capital=1000000000, risk_per_trade=None):
+        # Save the figure as PNG
+        try:
+            fig.write_image(output_file, width=1200, height=600)
+            print(f"Return plot saved to {output_file}")
+        except Exception as e:
+            print("Error saving image. Make sure kaleido is installed:", e)
+
+
+    def extract_trades(self, data_test, capital=1000000000, risk_per_trade=None, fee_add=0.47):
         if data_test is None or data_test.empty:
             print("No data available to extract trades.")
             return []
-        
+
         if risk_per_trade is None:
             risk_per_trade = self.risk_per_trade
 
         position = 0
         entry_price = 0
         trades = []
-        trend = None
         capital_map = {data_test["date"].iloc[0]: capital}
+        fee = fee_add
 
         for i in range(2, len(data_test)):
             current_date = data_test["date"].iloc[i]
-
-            sma_diff_prev = data_test["SMA50"].iloc[i - 1] - data_test["SMA200"].iloc[i - 1]
-            sma_diff_now = data_test["SMA50"].iloc[i] - data_test["SMA200"].iloc[i]
-
-            if sma_diff_prev < 0 and sma_diff_now > 0:
-                trend = "up"
-            elif sma_diff_prev > 0 and sma_diff_now < 0:
-                trend = "down"
-
+            current_price = float(data_test["close"].iloc[i])
             trade_size = capital * risk_per_trade
 
-            if position == 0 and trend:
-                entry_price = float(data_test["close"].iloc[i])
-                if trend == "up" and (data_test["RSI"].iloc[i] < self.rsi_oversold or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i]):
+            if position == 0:
+                entry_price = current_price
+
+                if data_test["RSI"].iloc[i] < self.rsi_oversold and current_price <= data_test["BB_Lower"].iloc[i]:
                     position = 1
                     date_open = current_date
                     capital_open = capital
-                elif trend == "down" and data_test["RSI"].iloc[i] > self.rsi_overbought:
+
+                elif data_test["RSI"].iloc[i] > self.rsi_overbought:
                     position = -1
                     date_open = current_date
                     capital_open = capital
 
             elif position == 1:
-                if (trend == "up" and (data_test["RSI"].iloc[i] > self.rsi_overbought or data_test["close"].iloc[i] >= data_test["BB_Upper"].iloc[i])) or \
-                (trend == "down" and data_test["RSI"].iloc[i] > self.rsi_overbought):
-                    exit_price = float(data_test["close"].iloc[i])
-                    profit = (exit_price - entry_price) - 0.47  # Apply fee after trade
+                price_change = (current_price - entry_price) / entry_price
+
+                if price_change <= -self.stop_loss or price_change >= self.take_profit or \
+                data_test["RSI"].iloc[i] > self.rsi_overbought or current_price >= data_test["BB_Upper"].iloc[i]:
+
+                    profit = (current_price - entry_price) - fee
                     capital += (profit / entry_price) * trade_size
 
                     trades.append({
@@ -325,10 +330,12 @@ class Backtesting:
                     position = 0
 
             elif position == -1:
-                if (trend == "up" and data_test["RSI"].iloc[i] < self.rsi_oversold) or \
-                (trend == "down" and (data_test["RSI"].iloc[i] < self.rsi_oversold or data_test["close"].iloc[i] <= data_test["BB_Lower"].iloc[i])):
-                    exit_price = float(data_test["close"].iloc[i])
-                    profit = ((exit_price - entry_price) * position) - 0.47  # Apply fee after trade
+                price_change = (entry_price - current_price) / entry_price
+
+                if price_change <= -self.stop_loss or price_change >= self.take_profit or \
+                data_test["RSI"].iloc[i] < self.rsi_oversold or current_price <= data_test["BB_Lower"].iloc[i]:
+
+                    profit = ((current_price - entry_price) * position) - fee
                     capital += (profit / entry_price) * trade_size
 
                     trades.append({
@@ -344,6 +351,7 @@ class Backtesting:
             capital_map[current_date] = capital
 
         return trades
+
 
 
     # Modify backtest_strategy to store returns and call plot_returns    
