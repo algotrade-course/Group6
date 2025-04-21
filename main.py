@@ -209,46 +209,52 @@ def run_backtest_from_optimized_params():
 
     params = result["best_params"]
 
-    # Ask user which dataset to use
-    print("\nWhich dataset do you want to run the backtest on?")
-    print("1. In-sample data")
-    print("2. Out-of-sample data")
-    print("3. All data")
-    dataset_choice = input("Enter choice (1/2/3): ").strip()
+    while True:
+        print("\nWhich dataset do you want to run the backtest on?")
+        print("1. In-sample data")
+        print("2. Out-of-sample data")
+        print("3. All data")
+        print("0. Back to Main Menu")
+        dataset_choice = input("Enter choice (0/1/2/3): ").strip()
 
-    in_sample_flag = False
-    out_sample_flag = False
-    all_sample_flag = False
+        if dataset_choice == "0":
+            print("Returning to main menu...")
+            return
 
-    if dataset_choice == "1":
-        in_sample_flag = True
-    elif dataset_choice == "2":
-        out_sample_flag = True
-    elif dataset_choice == "3":
-        all_sample_flag = True
-    else:
-        print("Invalid choice. Defaulting to in-sample data.")
-        in_sample_flag = True
+        in_sample_flag = False
+        out_sample_flag = False
+        all_sample_flag = False
 
-    backtest = Backtesting(
-        params["period_rsi"],
-        params["period_bb"],
-        0.8,  # in_sample_size for splitting
-        params["risk_per_trade"],
-        params["rsi_oversold"],
-        params["rsi_overbought"],
-        params["stop_loss"],
-        params["take_profit"],
-    )
+        if dataset_choice == "1":
+            in_sample_flag = True
+        elif dataset_choice == "2":
+            out_sample_flag = True
+        elif dataset_choice == "3":
+            all_sample_flag = True
+        else:
+            print("Invalid choice. Please select a valid option.")
+            continue
 
-    backtest.initiate_data(True)
-    backtest.apply_indicators()
-    
-    backtest.run_backtest(
-        print_result=True,
-        all_sample=all_sample_flag,
-        out_sample=out_sample_flag
-    )
+        backtest = Backtesting(
+            params["period_rsi"],
+            params["period_bb"],
+            0.8,  # in_sample_size for splitting
+            params["risk_per_trade"],
+            params["rsi_oversold"],
+            params["rsi_overbought"],
+            params["stop_loss"],
+            params["take_profit"],
+        )
+
+        backtest.initiate_data(True)
+        backtest.apply_indicators()
+
+        backtest.run_backtest(
+            print_result=True,
+            all_sample=all_sample_flag,
+            out_sample=out_sample_flag
+        )
+
 
 
 
