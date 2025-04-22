@@ -238,6 +238,8 @@ The backtest will execute the strategy on the in-sample data, applying the defin
 | Sharpe Ratio            | -0.1387                |
 | Number of Transactions  | 324                    |
 
+![In-sample Performance Plot](E:\github\Group6\insample.png)
+
 These results indicate that while the strategy was moderately successful in identifying profitable trades (with a **win rate above 50%**), it still resulted in an overall **net loss** during the in-sample period. The **Sharpe Ratio being negative** suggests that returns did not compensate for the volatility, meaning the strategy carried risk without consistent reward.
 
 Despite the negative return, the relatively low drawdown and decent trade count imply the system maintains **risk control**, though the entry and exit rules may require further tuning to improve profitability.
@@ -282,6 +284,7 @@ The following parameters are subject to optimization:
 | `take_profit`     | 0.05 to 0.3 (float, step 0.05) | Max gain before closing a trade |
 
 These values are sampled in each trial and passed into the `Backtesting` instance for evaluation.
+
 
 ---
 
@@ -379,6 +382,7 @@ python main.py
 | Sharpe Ratio            | -0.3119              |
 | Number of Transactions  | 91                   |
 
+![Out-of-sample Performance Plot](E:\github\Group6\outsample.png)
 #### 🔍 Interpretation
 
 The out-of-sample results demonstrate a **mild negative return** of -1.31%, which, although better than the in-sample performance (-2.43%), still indicates the strategy did not generate consistent profitability on unseen data.
@@ -400,8 +404,10 @@ While the strategy showed some consistency between in-sample and out-of-sample b
 The out-of-sample test confirms that the strategy is **not severely overfitted**, but also **not yet profitable**, making it a stable yet underperforming baseline for future iterations.
 
 ## Reference
-- All the reference goes here.
-
-## Other information
-- Link to the Final Report (Paper) should be somewhere in the `README.md` file.
-- Please make sure this file is relatively easy to follow.
+- [Optuna Documentation](https://optuna.readthedocs.io/en/stable/)
+- [Bollinger Bands](https://www.investopedia.com/terms/b/bollingerbands.asp)
+- [Relative Strength Index (RSI)](https://www.investopedia.com/terms/r/rsi.asp)
+- [Sharpe Ratio](https://www.investopedia.com/terms/s/sharperatio.asp)
+- [Maximum Drawdown](https://www.investopedia.com/terms/m/maximum-drawdown.asp)
+- [Win Rate](https://www.investopedia.com/terms/w/winrate.asp)
+- [Backtesting](https://www.investopedia.com/terms/b/backtesting.asp)
