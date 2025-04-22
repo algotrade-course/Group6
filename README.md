@@ -1,5 +1,10 @@
 ## Abstract
-- Summarize the project: motivation, methods, findings, etc. 
+
+This project investigates a rule-based trading strategy using a combination of the Relative Strength Index (RSI) and Bollinger Bands (BB) to identify potential trend reversals in financial markets. The strategy is implemented and backtested on high-frequency minute-level data from the VN30F1M futures index. It aims to enter long positions during oversold conditions and short positions during overbought scenarios, with predefined stop-loss and take-profit thresholds for risk management.
+
+A backtesting framework is developed in Python, featuring modular components for data handling, technical indicator calculation, and trade execution. The initial strategy is evaluated using in-sample backtesting on 80% of the dataset, followed by hyperparameter optimization using the Optuna library. The optimized parameters are then tested on the remaining 20% out-of-sample data to evaluate the model's generalization capability.
+
+Results show that the strategy achieves a win rate of approximately 50–55% across both testing phases, with low drawdowns indicating controlled risk exposure. However, both in-sample and out-of-sample tests result in small negative returns and a negative Sharpe ratio, suggesting the strategy’s lack of consistent profitability in its current form. The findings provide a reliable baseline for further enhancement and highlight the importance of combining momentum and volatility signals in quantitative trading strategies.
 
 ## Introduction
 In recent years, the application of algorithmic trading strategies has become increasingly prominent in financial markets. This project aims to investigate the effectiveness of a rule-based technical trading strategy, leveraging well-known indicators such as Relative Strength Index (RSI), and Bollinger Bands (BB) to predict trend reversals and generate trading signals.
