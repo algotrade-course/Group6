@@ -237,8 +237,7 @@ The backtest will execute the strategy on the in-sample data, applying the defin
 | Max Drawdown            | 2.77%                  |
 | Sharpe Ratio            | -0.1387                |
 | Number of Transactions  | 324                    |
-
-![In-sample Performance Plot](E:\github\Group6\insample.png)
+![insample](https://github.com/user-attachments/assets/0d223c1d-ff25-4229-9be8-7c294bd98984)
 
 These results indicate that while the strategy was moderately successful in identifying profitable trades (with a **win rate above 50%**), it still resulted in an overall **net loss** during the in-sample period. The **Sharpe Ratio being negative** suggests that returns did not compensate for the volatility, meaning the strategy carried risk without consistent reward.
 
@@ -382,7 +381,8 @@ python main.py
 | Sharpe Ratio            | -0.3119              |
 | Number of Transactions  | 91                   |
 
-![Out-of-sample Performance Plot](E:\github\Group6\outsample.png)
+![outsample](https://github.com/user-attachments/assets/e17b0e07-95ab-4950-89e5-ee94105b188c)
+
 #### 🔍 Interpretation
 
 The out-of-sample results demonstrate a **mild negative return** of -1.31%, which, although better than the in-sample performance (-2.43%), still indicates the strategy did not generate consistent profitability on unseen data.
