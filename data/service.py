@@ -12,21 +12,21 @@ class DataFetcher:
         with open(self.db_config_path, 'rb') as fb:
             return json.load(fb)
 
-    def fetch_data(self):
-        db_info = self.load_db_config()
-        with psycopg2.connect(
-            host=db_info['host'],
-            port=db_info['port'],
-            dbname=db_info['database'],
-            user=db_info['user'],
-            password=db_info['password']
-        ) as conn:
-            with conn.cursor() as cur:
-                cur.execute(matched_data_query)
-                self.df = pd.DataFrame(cur.fetchall(), columns=['date', 'symbol', 'high', 'low', 'close', 'open'])
+    # def fetch_data(self):
+    #     db_info = self.load_db_config()
+    #     with psycopg2.connect(
+    #         host=db_info['host'],
+    #         port=db_info['port'],
+    #         dbname=db_info['database'],
+    #         user=db_info['user'],
+    #         password=db_info['password']
+    #     ) as conn:
+    #         with conn.cursor() as cur:
+    #             cur.execute(matched_data_query)
+    #             self.df = pd.DataFrame(cur.fetchall(), columns=['date', 'symbol', 'high', 'low', 'close', 'open'])
         
-        self.process_data()
-        return self.df
+    #     self.process_data()
+    #     return self.df
 
     def process_data(self):
         self.df.columns = [col.lower() for col in self.df.columns]  # normalize column names
