@@ -1,0 +1,11 @@
+{
+    "best_params": {
+        "period_bb": 24,
+        "period_rsi": 16,
+        "risk_per_trade": 0.1,
+        "rsi_oversold": 13.0,
+        "rsi_overbought": 90.0,
+        "stop_loss": 0.15,
+        "take_profit": 0.1
+    }
+}

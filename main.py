@@ -100,11 +100,14 @@ def run_optimization(n_trials):
     if run_now == 'y':
         run_backtest_from_optimized_params()
 
-def run_backtest_no_fee():
-    result_path = os.path.join(os.getcwd(), "optimization_results.json")
+def run_backtest_no_fee(default=False):
+    if default:
+        result_path = os.path.join(os.getcwd(), "default_best_params.json")
+    else:
+        result_path = os.path.join(os.getcwd(), "optimization_results.json")
     
     if not os.path.exists(result_path):
-        print("No set of parameters found. Please run optimization first to receive a set of parameters.")
+        print("No set of optimized parameters found. Please run optimization first to receive a set of parameters.")
         return
 
     with open(result_path, "r") as f:
@@ -160,11 +163,14 @@ def run_backtest_no_fee():
         )
 
 
-def run_backtest_from_optimized_params():
-    result_path = os.path.join(os.getcwd(), "optimization_results.json")
+def run_backtest_from_optimized_params(default=False):
+    if default:
+        result_path = os.path.join(os.getcwd(), "default_best_params.json")
+    else:
+        result_path = os.path.join(os.getcwd(), "optimization_results.json")
     
     if not os.path.exists(result_path):
-        print("No set of parameters found. Please run optimization first to receive a set of parameters.")
+        print("No set of optimized parameters found. Please run optimization first to receive a set of parameters.")
         return
 
     with open(result_path, "r") as f:
@@ -232,22 +238,39 @@ def main_menu():
         print("4. Exit")
         choice = input("Choose an option: ")
 
-        if choice == "1":
-            run_backtest_from_optimized_params()
-        elif choice == "2":
-            run_backtest_no_fee()
-        elif choice == "3":            
+        if choice == "1" or choice == "2":
+            while True:
+                print("\nUse default parameters or optimized parameters?")
+                print("1. Optimized parameters")
+                print("2. Default best parameters")
+                print("0. Back to main menu")
+                param_choice = input("Enter choice (0/1/2): ").strip()
+
+                if param_choice == "0":
+                    break
+                elif param_choice in ["1", "2"]:
+                    use_default = param_choice == "2"
+                    if choice == "1":
+                        run_backtest_from_optimized_params(default=use_default)
+                    else:
+                        run_backtest_no_fee(default=use_default)
+                    break
+                else:
+                    print("Invalid choice. Please select a valid option.")
+        
+        elif choice == "3":
             try:
                 n = int(input("Enter number of optimization trials: "))
                 run_optimization(n)
             except ValueError:
                 print("Please enter a valid number.")
+        
         elif choice == "4":
-            print ("Exiting...")
+            print("Exiting...")
             break
+        
         else:
-            print("Invalid choice. Please select 1, 2, or 3.")
-
+            print("Invalid choice. Please select 1, 2, 3, or 4.")
 
 if __name__ == "__main__":
     main_menu()
