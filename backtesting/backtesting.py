@@ -126,7 +126,7 @@ class Backtesting:
 
         print(f"Candlestick chart saved to {output_file}")
 
-    def plot_returns(self, capital_map, output_file="returns.png"):
+    def plot_returns(self, capital_map):
         if capital_map is None or not capital_map:
             print("No capital data available. Cannot plot returns.")
             return
@@ -146,14 +146,6 @@ class Backtesting:
         # Show in a pop-up window
         plt.tight_layout()
         plt.show()
-
-        # Save as PNG
-        try:
-            plt.savefig(output_file)
-            print(f"Return plot saved to {output_file}")
-        except Exception as e:
-            print("Error saving image:", e)
-
 
 
     def extract_trades(self, data_test, capital=1000000000, risk_per_trade=None, fee_add=0.47):
