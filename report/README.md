@@ -305,16 +305,16 @@ At the end of the process, Users are prompted to immediately re-run the backtest
 ### Optimization Result
 - The optimization process yields the following best parameters - which we mentioned above:
 
-| Parameter         | Value | Description |
-|-------------------|-------|-------------|
-| `in_sample_size`  | 0.8   | 80% of the dataset is used for in-sample backtesting |
-| `period_bb`       | 24    | Window length for Bollinger Bands |
-| `period_rsi`      | 16    | Window length for RSI |
-| `risk_per_trade`  | 0.1   | 10% of available capital allocated to each trade |
-| `rsi_oversold`    | 13    | RSI threshold to detect oversold conditions |
-| `rsi_overbought`  | 90    | RSI threshold to detect overbought conditions |
-| `stop_loss`       | 0.15  | Trades are closed if a 15% loss is reached |
-| `take_profit`     | 0.1   | Trades are closed if a 10% gain is reached | 
+| Parameter         | Value | Description                                           |
+|-------------------|-------|-------------------------------------------------------|
+| `in_sample_size`  | 0.8   | 80% of the dataset is used for in-sample backtesting  |
+| `period_bb`       | 24    | Window length for Bollinger Bands                     |
+| `period_rsi`      | 16    | Window length for RSI                                 |
+| `risk_per_trade`  | 0.1   | 10% of available capital allocated to each trade      |
+| `rsi_oversold`    | 13    | RSI threshold to detect oversold conditions           |
+| `rsi_overbought`  | 90    | RSI threshold to detect overbought conditions         |
+| `stop_loss`       | 0.15  | Trades are closed if a 15% loss is reached            |
+| `take_profit`     | 0.1   | Trades are closed if a 10% gain is reached            | 
 
 ---
 
