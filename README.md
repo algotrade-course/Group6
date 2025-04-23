@@ -259,7 +259,7 @@ The optimization step is designed to automatically search for the best set of st
 
 ---
 
-### ⚙️ Optimization Process
+### Optimization Process
 
 The strategy parameters are optimized using **Optuna**, an open-source hyperparameter optimization framework. Optuna employs an efficient sampling algorithm called **Tree-structured Parzen Estimator (TPE)**, which intelligently explores the parameter space by learning from previous trials. This method balances exploration and exploitation better than traditional grid or random search approaches.
 
@@ -274,7 +274,7 @@ The optimization process is implemented in both `main.py` (interactive) and `opt
 
 ---
 
-### 🎯 Parameters Optimized
+### Parameters Optimized
 
 The following parameters are subject to optimization:
 
@@ -390,7 +390,7 @@ python main.py
 
 ![outsample](https://github.com/user-attachments/assets/e17b0e07-95ab-4950-89e5-ee94105b188c)
 
-#### 🔍 Interpretation
+#### Interpretation
 
 The out-of-sample results demonstrate a **mild negative return** of -1.31%, which, although better than the in-sample performance (-2.43%), still indicates the strategy did not generate consistent profitability on unseen data.
 
@@ -401,7 +401,7 @@ Some key insights:
 - The **Sharpe ratio is negative**, reflecting that returns did not justify the volatility taken on during the period.
 - A relatively low number of trades (91) implies **lower market activity** or **stricter entry conditions** in the out-of-sample dataset.
 
-#### 📌 Conclusion
+#### Conclusion
 
 While the strategy showed some consistency between in-sample and out-of-sample behavior in terms of win rate and drawdown, it failed to generate a positive return in both cases. This suggests the need for:
 - Further tuning of risk-reward thresholds.
