@@ -312,6 +312,7 @@ python main.py
 At the end of the process, Users are prompted to immediately re-run the backtest using the optimal parameters on in-sample, out-of-sample, or full dataset.
 ### Optimization Result
 - The optimization process yields the following best parameters - which we mentioned above:
+
 | Parameter         | Value | Description |
 |-------------------|-------|-------------|
 | `in_sample_size`  | 0.8   | 80% of the dataset is used for in-sample backtesting |
