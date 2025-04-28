@@ -1,3 +1,5 @@
+![Static Badge](https://img.shields.io/badge/PLUTUS-70%25-darkgreen)
+
 ## Abstract
 
 This project investigates a rule-based trading strategy using a combination of the Relative Strength Index (RSI) and Bollinger Bands (BB) to identify potential trend reversals in financial markets. The strategy is implemented and backtested on high-frequency minute-level data from the VN30F1M futures index. It aims to enter long positions during oversold conditions and short positions during overbought scenarios, with predefined stop-loss and take-profit thresholds for risk management.
